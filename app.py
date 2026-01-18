@@ -296,7 +296,7 @@ with tab1:
     st.markdown("#### 1. Importez votre fichier")
     st.info("ℹ️ Vos fichiers sont traités localement. Seule l'empreinte cryptographique est envoyée.")
     
-    uploaded_file = st.file_uploader("Glissez votre fichier ici", type=['png', 'jpg', 'jpeg', 'pdf', 'mp3', 'wav'])
+    uploaded_file = st.file_uploader("Glissez votre fichier ici", type=['png', 'jpg', 'jpeg', 'pdf', 'mp3', 'wav', 'mp4', 'mov', 'avi', 'mkv'])
 
     if uploaded_file:
         file_hash = calculate_file_hash(uploaded_file)
