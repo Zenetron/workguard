@@ -508,7 +508,7 @@ try:
         st.markdown(
             f"""
             <div style='display: flex; justify-content: center; margin-bottom: 0px;'>
-                <img src="data:image/png;base64,{data}" width="120" style="pointer-events: none; margin-left: 10px;">
+                <img src="data:image/png;base64,{data}" width="120" style="pointer-events: none; position: relative; left: 15px;">
             </div>
             """,
             unsafe_allow_html=True
@@ -517,7 +517,7 @@ except Exception as e:
     st.error(f"Erreur chargement logo: {e}")
 
 st.markdown("<h1 style='text-align: center; margin-top: -20px;'>WorkGuard</h1>", unsafe_allow_html=True)
-st.markdown("<h3 style='text-align: center;'>La preuve d'antériorité Décentralisée.</h3>", unsafe_allow_html=True)
+st.markdown("<h3 style='text-align: center;'>La preuve d'antériorité décentralisée.</h3>", unsafe_allow_html=True)
 st.markdown("<p style='text-align: center;'>Protégez vos créations (Vidéos, Photos, Audios, Contrats) en les ancrant immuablement sur la Blockchain Polygon.</p>", unsafe_allow_html=True)
 st.markdown("---")
 
