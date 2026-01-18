@@ -255,7 +255,7 @@ def anchor_hash_on_polygon(file_hash, author_name, recipient_address=None):
 
 st.title("🛡️ WorkGuard")
 st.markdown("### La Preuve d'Antériorité Décentralisée.")
-st.markdown("Protégez vos créations (Design, Audio, Contrats) en les ancrant immuablement sur la Blockchain Polygon.")
+st.markdown("Protégez vos créations (Vidéos, Photos, Audios, Contrats) en les ancrant immuablement sur la Blockchain Polygon.")
 st.markdown("---")
 
 # IMPLÉMENTATION "MANUELLE" DE L'ACCORDÉON POUR ÉVITER LE BUG VISUEL
@@ -277,6 +277,7 @@ if st.session_state.show_help:
     2.  **Ancrage Blockchain** : Ce Hash est envoyé sur la Blockchain Polygon. Comme la Blockchain est ineffaçable, cela prouve que ce fichier existait à cette date précise.
     3.  **Paternité (Votre Nom)** : Nous inscrivons aussi votre **Nom** (ou Pseudo) à côté de l'empreinte pour prouver que c'est VOUS l'auteur.
     4.  **Confidentialité** : Votre fichier **reste sur votre ordinateur**. Seul le Hash crypté est publié.
+    5.  **Votre Preuve** : Vous pouvez **ajouter votre adresse Wallet** pour recevoir la preuve directement chez vous, ou simplement copier le Certificat généré à la fin.
     
     ### ⚠️ RÈGLE D'OR : NE MODIFIEZ PAS VOTRE FICHIER
     Pour prouver que vous êtes l'auteur, vous devrez présenter **exactement le même fichier** dans le futur.
@@ -485,4 +486,4 @@ with tab2:
         st.markdown(f"[Ouvrir PolygonScan](https://polygonscan.com/)")
 
 st.markdown("---")
-st.caption("🔒 WorkGuard v2.0 (Live Polygon) - Sécurisé par la Mathématique.")
+st.caption("🔒 WorkGuard - Sécurisé par la Blockchain.")
