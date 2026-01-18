@@ -262,7 +262,28 @@ def anchor_hash_on_polygon(file_hash, author_name, recipient_address=None):
     except Exception as e:
         return {"success": False, "error": str(e)}
 
-def create_pdf_certificate(author_name, file_name, file_hash, tx_hash, timestamp, payload):
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+def verify_manual_tx(tx_hash, expected_amount_pol, company_address):
+    """Vérifie manuellement une transaction donnée par son hash."""
+    try:
+        w3 = Web3(Web3.HTTPProvider(RPC_URL))
+        tx = w3.eth.get_transaction(tx_hash)
+        
+        # 1. Vérifier le destinataire
+        if tx['to'].lower() != company_address.lower():
+            return False, "Ce paiement n'a pas été envoyé à la bonne adresse."
+            
+        # 2. Vérifier le montant (avec tolérance 98%)
+        value_pol = float(w3.from_wei(tx['value'], 'ether'))
+        if value_pol < (expected_amount_pol * 0.98):
+             return False, f"Montant insuffisant ({value_pol} POL). Requis : {expected_amount_pol} POL."
+             
+        return True, "OK"
+    except Exception as e:
+        return False, f"Transaction invalide ou introuvable : {str(e)}"
+
     """Génère un PDF officiel pour le certificat."""
     pdf = FPDF()
     pdf.add_page()
@@ -508,8 +529,26 @@ with tab1:
                         else:
                             payment_verified = False
                             st.error(f"❌ Paiement non détecté ou insuffisant.")
+                            st.error(f"❌ Paiement non détecté ou insuffisant.")
                             st.warning(f"Attendu: +{cost_in_pol:.4f} POL | Reçu: {diff_pol:.4f} POL")
                 
+                # SOS FALBACK - VÉRIFICATION MANUELLE
+                if not payment_verified:
+                    with st.expander("🆘 Mon paiement n'est pas détecté ?"):
+                        st.info("Si vous avez payé mais que le système ne le voit pas (ex: vous avez rafraîchi la page), copiez l'ID de Transaction (TX Hash) depuis votre Wallet et collez-le ici.")
+                        manual_tx = st.text_input("Collez votre TX Hash (ex: 0x123abc...)")
+                        if st.button("Vérifier manuellement cette transaction"):
+                            if MOCK_MODE:
+                                success, msg = True, "Mock OK"
+                            else:
+                                success, msg = verify_manual_tx(manual_tx, cost_in_pol, COMPANY_WALLET_ADDRESS)
+                            
+                            if success:
+                                payment_verified = True
+                                st.success("✅ Transaction valide trouvée ! Reprise de l'ancrage...")
+                            else:
+                                st.error(f"❌ Erreur : {msg}")
+
                 if payment_verified:
                     st.success("Paiement reçu ! Ancrage en cours...")
                     
