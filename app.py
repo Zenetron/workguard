@@ -5,6 +5,8 @@ import random
 import requests
 import qrcode
 from io import BytesIO
+import os
+import tempfile
 from datetime import datetime
 from web3 import Web3
 
@@ -303,8 +305,35 @@ def create_pdf_certificate(author_name, file_name, file_hash, tx_hash, timestamp
     pdf.multi_cell(0, 5, "Ce document certifie que l'empreinte numérique du fichier susmentionné a été ancrée de manière immuable sur la Blockchain Polygon à la date indiquée. La présence de cette transaction prouve l'existence du fichier à cet instant précis.", 0, 'C')
     
     pdf.ln(20)
+    pdf.ln(20)
     pdf.set_font("Arial", 'B', 10)
     pdf.cell(0, 10, "Vérifiable sur : https://polygonscan.com/", 0, 1, 'C')
+
+    # AJOUT QR CODE
+    try:
+        # Lien direct vers la transaction
+        tx_link = f"https://polygonscan.com/tx/{tx_hash}"
+        
+        # Génération QR
+        qr = qrcode.QRCode(box_size=10, border=1)
+        qr.add_data(tx_link)
+        qr.make(fit=True)
+        img = qr.make_image(fill_color="black", back_color="white")
+        
+        # Sauvegarde temporaire
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as tmp_file:
+            img.save(tmp_file.name)
+            tmp_path = tmp_file.name
+            
+        # Placement au centre, en bas
+        # Page width ~210mm. Image width 30mm. X = (210-30)/2 = 90
+        pdf.image(tmp_path, x=90, y=pdf.get_y() + 5, w=30)
+        
+        # Nettoyage
+        os.unlink(tmp_path)
+        
+    except Exception as e:
+        print(f"Erreur QR PDF: {e}")
     
     return pdf.output(dest='S').encode('latin-1')
 
@@ -374,7 +403,6 @@ with tab1:
         st.code(file_hash, language="text")
         
         st.divider()
-        st.markdown("#### 2. Identité de l'Auteur")
         st.markdown("#### 2. Identité de l'Auteur")
         author_name = st.text_input("Votre Nom ou Pseudonyme (sera gravé sur la Blockchain)", placeholder="Ex: Satoshi Nakamoto")
         
