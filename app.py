@@ -99,9 +99,17 @@ st.markdown("""
     }
 
     /* COMPONENTS */
-    .streamlit-expanderHeader { background-color: #0F172A !important; border: 1px solid #1E293B; color: #F8FAFC !important; }
-    div[data-testid="stExpander"] { background-color: #0F172A; border: 1px solid #1E293B; border-radius: 8px; }
-    div[data-testid="stExpander"] p { color: #CBD5E1; }
+    /* EXTENDER / EXPANDER - SIMPLIFIED TO AVOID ARROW BUG */
+    .streamlit-expanderHeader { 
+        background-color: #0F172A !important; 
+        color: #F8FAFC !important; 
+        border-radius: 8px !important;
+    }
+    div[data-testid="stExpander"] { 
+        border: 1px solid #1E293B; 
+        border-radius: 8px; 
+        background-color: #0F172A;
+    }
 
     [data-testid='stFileUploader'] {
         background-color: #0F172A; padding: 20px; border-radius: 12px; border: 1px dashed #334155;
@@ -363,17 +371,27 @@ with tab1:
                         st.balloons()
                         st.success("✅ **FÉLICITATIONS ! VOTRE ŒUVRE EST PROTÉGÉE.**")
                         with st.expander("Voir le Certificat de Preuve", expanded=True):
-                            st.markdown(f"""
-                            ### 📜 Certificat WorkGuard
-                            | Champ | Valeur |
-                            | :--- | :--- |
-                            | **Propriétaire** | **{author_name}** |
-                            | **Fichier** | `{uploaded_file.name}` |
-                            | **Hash** | `{file_hash}` |
-                            | **Donnée Gravée** | `{result.get('payload')}` |
-                            | **Date** | {result['timestamp']} |
-                            | **TX ID** | `{result['tx_hash']}` |
-                            """)
+                            st.markdown("### 📜 Certificat WorkGuard")
+                            
+                            st.write("**Propriétaire**")
+                            st.info(author_name)
+                            
+                            st.write("**Fichier**")
+                            st.text(uploaded_file.name)
+                            
+                            st.write("**Empreinte (Hash)**")
+                            st.code(file_hash, language="text")
+                            
+                            st.write("**Donnée Gravée**")
+                            st.code(result.get('payload'), language="text")
+                            
+                            col_date, col_tx = st.columns([1, 2])
+                            with col_date:
+                                st.write("**Date**")
+                                st.text(result['timestamp'])
+                            with col_tx:
+                                st.write("**Transaction ID (TX)**")
+                                st.code(result['tx_hash'], language="text")
                             link = f"https://polygonscan.com/tx/{result['tx_hash']}"
                             st.markdown(f"[🔎 Voir sur PolygonScan]({link})")
                             st.caption("Sur PolygonScan, cliquez sur 'Click to see More' -> 'Input Data' -> 'View as UTF-8' pour lire votre nom.")
