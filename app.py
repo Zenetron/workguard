@@ -7,7 +7,7 @@ import qrcode
 from io import BytesIO
 from datetime import datetime
 from web3 import Web3
-from web3 import Web3
+
 from eth_account import Account
 from fpdf import FPDF
 
@@ -448,8 +448,14 @@ with tab1:
                         current_balance_wei = w3.eth.get_balance(COMPANY_WALLET_ADDRESS)
                         
                         # Calcul de la différence
+                        # Calcul de la différence
                         diff_wei = current_balance_wei - st.session_state['initial_balance_wei']
-                        diff_pol = float(w3.from_wei(diff_wei, 'ether'))
+                        
+                        # Si solde négatif (ex: frais de gaz payés entre temps), on considère 0 reçu
+                        if diff_wei < 0:
+                            diff_pol = 0.0
+                        else:
+                            diff_pol = float(w3.from_wei(diff_wei, 'ether'))
                         
                         # Seuil de tolérance (on accepte si on a reçu au moins 98% du prix)
                         expected_pol = cost_in_pol * 0.98
