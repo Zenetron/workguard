@@ -528,40 +528,47 @@ with tab1:
                 st.session_state.proof_cache = {}
 
             if do_check:
+                payment_verified = False
+                found_tx_hash = None
                 
-                if MOCK_MODE:
-                    payment_verified = True # En Mock, on laisse passer
-                else:
-                    with st.spinner("Vérification de la réception des fonds sur la Blockchain..."):
-                        time.sleep(1) # Petit temps pour laisser la blockchain respirer
-                        w3 = Web3(Web3.HTTPProvider(RPC_URL))
-                        current_balance_wei = w3.eth.get_balance(COMPANY_WALLET_ADDRESS)
-                        
-                        # Calcul de la différence
-                        # Calcul de la différence
-                        diff_wei = current_balance_wei - st.session_state['initial_balance_wei']
-                        
-                        # Si solde négatif (ex: frais de gaz payés entre temps), on considère 0 reçu
-                        if diff_wei < 0:
-                            diff_pol = 0.0
-                        else:
-                            diff_pol = float(w3.from_wei(diff_wei, 'ether'))
-                        
-                        # Seuil de tolérance (on accepte si on a reçu au moins 98% du prix)
-                        expected_pol = cost_in_pol * 0.98
-                        
-                        # LOGIQUE PRINCIPALE : On vérifie le paiement OU on est en mode Dev
-                        if diff_pol >= expected_pol or DEV_BYPASS_PAYMENT:
+                # MODE STRICT : Si l'utilisateur nous a donné son adresse, on vérifie VRAIMENT
+                if recipient_address and len(recipient_address) > 10 and not MOCK_MODE:
+                    with st.spinner(f"🔍 Scan des 20 derniers blocs pour trouver un paiement de {recipient_address}..."):
+                        found, tx_id = scan_recent_blocks(recipient_address, cost_in_pol, COMPANY_WALLET_ADDRESS)
+                        if found:
                             payment_verified = True
-                            if DEV_BYPASS_PAYMENT:
-                                st.warning("⚠️ PAIEMENT NON VÉRIFIÉ (Mode Développeur Actif)")
-                            else:
-                                st.success(f"Paiement confirmé ! Reçu: {diff_pol:.4f} POL")
+                            found_tx_hash = tx_id
+                            st.success(f"✅ Paiement authentifié ! (TX: {tx_id[:10]}...)")
                         else:
-                            payment_verified = False
-                            st.error(f"❌ Paiement non détecté ou insuffisant.")
-                            st.error(f"❌ Paiement non détecté ou insuffisant.")
-                            st.warning(f"Attendu: +{cost_in_pol:.4f} POL | Reçu: {diff_pol:.4f} POL")
+                             st.error("❌ Aucun paiement trouvé venant de cette adresse dans les 2 dernières minutes.")
+                             st.info("💡 Si vous avez payé il y a longtemps, utilisez le mode 'SOS' ci-dessous avec votre TX Hash.")
+                
+                # MODE CLASSIQUE (Fallback) : Vérification du solde global
+                elif not payment_verified:
+                    if MOCK_MODE:
+                        payment_verified = True
+                        found_tx_hash = "0xMockPaymentHash"
+                        st.info("Validation MOCK")
+                    else:
+                        with st.spinner(" Vérification standard (Solde)..."):
+                            time.sleep(1)
+                            try:
+                                w3 = Web3(Web3.HTTPProvider(RPC_URL))
+                                current_balance_wei = w3.eth.get_balance(COMPANY_WALLET_ADDRESS)
+                                
+                                diff_wei = current_balance_wei - st.session_state['initial_balance_wei']
+                                if diff_wei < 0: diff_wei = 0
+                                
+                                diff_pol = float(w3.from_wei(diff_wei, 'ether'))
+                                
+                                if diff_pol >= (cost_in_pol * 0.98):
+                                     payment_verified = True
+                                else:
+                                    payment_verified = False
+                                    st.error(f"❌ Paiement non détecté ou insuffisant.")
+                                    st.warning(f"Attendu: +{cost_in_pol:.4f} POL | Reçu: {diff_pol:.4f} POL")
+                            except Exception as e:
+                                st.error(f"Erreur vérif solde: {e}")
                 
                 # SOS FALBACK - VÉRIFICATION MANUELLE
                 if not payment_verified:
