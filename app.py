@@ -550,34 +550,34 @@ tab1, tab2 = st.tabs([T['tab_protect'], T['tab_verify']])
 
 # --- ONGLET 1 : PROTECTION & PAIEMENT ---
 with tab1:
-    st.markdown("#### 1. Importez votre fichier")
-    st.info("ℹ️ Vos fichiers sont traités localement. Seule l'empreinte cryptographique est envoyée.")
+    st.markdown(T['step_1'])
+    st.info(T['step_1_info'])
     
-    uploaded_file = st.file_uploader("Glissez votre fichier ici", type=['png', 'jpg', 'jpeg', 'pdf', 'mp3', 'wav', 'mp4', 'mov', 'avi', 'mkv'])
+    uploaded_file = st.file_uploader(T['upload_label'], type=['png', 'jpg', 'jpeg', 'pdf', 'mp3', 'wav', 'mp4', 'mov', 'avi', 'mkv'])
 
     if uploaded_file:
         file_hash = calculate_file_hash(uploaded_file)
-        st.write("Empreinte unique (SHA-256) :")
+        st.write(T['hash_label'])
         st.code(file_hash, language="text")
         
         st.divider()
-        st.markdown("#### 2. Identité de l'Auteur")
-        author_name = st.text_input("Votre Nom ou Pseudonyme (sera gravé sur la Blockchain)", placeholder="Ex: Satoshi Nakamoto")
+        st.markdown(T['step_2'])
+        author_name = st.text_input(T['author_label'], placeholder=T['author_placeholder'])
         
         # AJOUT : Adresse Wallet Client (OBLIGATOIRE POUR SÉCURITÉ)
-        st.caption("⚠️ **Attention** : Vous devez payer uniquement via le réseau **Polygon (MATIC / POL)**. Les paiements via Ethereum (Base, Arbitrum, Mainnet) seront perdus.")
-        recipient_address = st.text_input("Votre Adresse Polygon (Réseau Polygon uniquement)", placeholder="0x...")
+        st.caption(T['wallet_warning'])
+        recipient_address = st.text_input(T['wallet_label'], placeholder=T['wallet_placeholder'])
         
         # UX : On affiche la suite si le NOM est rempli (l'adresse est optionnelle si Voucher)
         if author_name:
             st.divider()
-            st.markdown("#### 3. Paiement du Service")
+            st.markdown(T['step_3'])
             
             # Prix Fixe en POL
             cost_in_pol = 20
             
             # --- VOUCHER SYSTEM ---
-            voucher_code = st.text_input("Code Promo / Voucher (Optionnel)", placeholder="Ex: PARTNER24")
+            voucher_code = st.text_input(T['voucher_label'], placeholder=T['voucher_placeholder'])
             
             # Liste des codes valides (Récupérés depuis secrets/env pour sécurité)
             # Format attendu dans secrets.toml : voucher_codes = "CODE1,CODE2,CODE3"
@@ -602,7 +602,7 @@ with tab1:
             if voucher_code and voucher_code.strip().upper() in VALID_VOUCHERS:
                 cost_in_pol = 0
                 is_free = True
-                st.success(f"✅ Code '{voucher_code.upper()}' appliqué ! Service GRATUIT !")
+                st.success(T['voucher_success'].format(code=voucher_code.upper()))
             # ----------------------
             
             # CENTERED LAYOUT
@@ -612,19 +612,18 @@ with tab1:
                 # Card-like container
                 with st.container(border=True):
                     
-                    # --- MODE GRATUIT (VOUCHER) ---
                     if is_free:
                          st.markdown(f"""
                         <div style="text-align: center;">
-                            <h2 style="color: #34D399; margin: 0;">OFFERT !</h2>
-                            <p style="color: #94A3B8; font-size: 0.8em; margin-bottom: 15px;">Frais de service pris en charge par le code promo</p>
+                            <h2 style="color: #34D399; margin: 0;">{T['payment_free_title']}</h2>
+                            <p style="color: #94A3B8; font-size: 0.8em; margin-bottom: 15px;">{T['payment_free_desc']}</p>
                         </div>
                         """, unsafe_allow_html=True)
                          
-                         st.success("✨ **C'est cadeau !** Nous payons les frais de gaz pour vous.")
+                         st.success(T['payment_free_success'])
                          
                          # Bouton spécial "Gasless"
-                         if st.button("🎁 LANCER L'ANCRAGE GRATUIT 🎁", type="primary", use_container_width=True):
+                         if st.button(T['btn_free'], type="primary", use_container_width=True):
                              st.session_state.payment_validated = True
                              st.session_state.tx_hash = "VOUCHER_OFFERT" # Fake hash pour le suivi
                              st.rerun()
@@ -634,7 +633,7 @@ with tab1:
                         st.markdown(f"""
                         <div style="text-align: center;">
                             <h2 style="color: #38BDF8; margin: 0;">{cost_in_pol} POL</h2>
-                            <p style="color: #94A3B8; font-size: 0.8em; margin-bottom: 15px;">TOTAL À PAYER (POLYGON)</p>
+                            <p style="color: #94A3B8; font-size: 0.8em; margin-bottom: 15px;">{T['payment_paid_desc']}</p>
                         </div>
                         """, unsafe_allow_html=True)
                         
@@ -647,11 +646,11 @@ with tab1:
                         # On utilise 3 colonnes invisibles [1, 2, 1] pour centrer l'image au milieu du container
                         sub_c1, sub_c2, sub_c3 = st.columns([1, 4, 1])
                         with sub_c2:
-                            st.image(qr_img, width=220, caption="Scanner avec votre Wallet", use_column_width=False)
+                            st.image(qr_img, width=220, caption=T['scan_caption'], use_column_width=False)
                         
                         st.divider()
                         
-                        st.markdown("<p style='text-align: center; font-size: 0.8em; margin-bottom: 5px;'>Ou envoyez manuellement à cette adresse :</p>", unsafe_allow_html=True)
+                        st.markdown(f"<p style='text-align: center; font-size: 0.8em; margin-bottom: 5px;'>{T['manual_pay_label']}</p>", unsafe_allow_html=True)
                         st.code(COMPANY_WALLET_ADDRESS, language="text")
 
             # --- LOGIQUE DE VÉRIFICATION DU SOLDE (VIGILE) ---
@@ -670,8 +669,8 @@ with tab1:
             if not is_free:
                 _, col_cta, _ = st.columns([1, 2, 1])
                 with col_cta:
-                    st.warning("⚠️ Une fois le paiement envoyé, cliquez sur le bouton ci-dessous.")
-                    do_check = st.button("✅ VÉRIFIER LE PAIEMENT & ANCRER")
+                    st.warning(T['payment_warning'])
+                    do_check = st.button(T['btn_verify_check'])
             else:
                 do_check = False # Pas de bouton de vérif en mode gratuit (le bouton spécial gère tout)
 
