@@ -315,7 +315,7 @@ def verify_manual_tx(tx_hash, expected_amount_pol, company_address, expected_sen
     except Exception as e:
         return False, f"Transaction invalide ou introuvable : {str(e)}"
 
-def create_pdf_certificate(author_name, file_name, file_hash, tx_hash, timestamp):
+def create_pdf_certificate(author_name, file_name, file_hash, tx_hash, timestamp, payload):
     """Génère un PDF officiel pour le certificat."""
     pdf = FPDF()
     pdf.add_page()
@@ -461,7 +461,7 @@ with tab1:
         author_name = st.text_input("Votre Nom ou Pseudonyme (sera gravé sur la Blockchain)", placeholder="Ex: Satoshi Nakamoto")
         
         # AJOUT : Adresse Wallet Client (OBLIGATOIRE POUR SÉCURITÉ)
-        st.caption("⚠️ **Attention** : Vous devez payer uniquement via le réseau **Polygon (MATIC)**. Les paiements via Ethereum (Base, Arbitrum, Mainnet) seront perdus.")
+        st.caption("⚠️ **Attention** : Vous devez payer uniquement via le réseau **Polygon (MATIC / POL)**. Les paiements via Ethereum (Base, Arbitrum, Mainnet) seront perdus.")
         recipient_address = st.text_input("Votre Adresse Polygon (Réseau Polygon uniquement)", placeholder="0x...")
         
         if author_name and (recipient_address and len(recipient_address) >= 10):
