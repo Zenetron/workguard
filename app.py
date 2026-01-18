@@ -611,23 +611,23 @@ with tab1:
                 # La suite du code d'ancrage reste ici...
                 payment_verified = True # Pour compatibilité avec le reste du code existant en bas
                     
-                    my_bar = st.progress(0, text="Connexion à Polygon...")
-                    steps = [(30, "Signature de la transaction..."), (60, "Diffusion sur le réseau..."), (90, "Confirmation...")]
-                    
-                    for p, t in steps:
-                        time.sleep(0.5)
-                        my_bar.progress(p, text=t)
-                    
-                    # REEL ANCRAGE
-                    if MOCK_MODE:
-                         result = {"success": True, "tx_hash": "0xMOCK_HASH_" + file_hash[:10], "timestamp": str(datetime.now()), "payload": f"Blob:{file_hash}|Owner:{author_name}"}
-                    else:
-                        result = anchor_hash_on_polygon(file_hash, author_name, recipient_address)
-                    
-                    my_bar.progress(100, text="Terminé !")
+                my_bar = st.progress(0, text="Connexion à Polygon...")
+                steps = [(30, "Signature de la transaction..."), (60, "Diffusion sur le réseau..."), (90, "Confirmation...")]
+                
+                for p, t in steps:
+                    time.sleep(0.5)
+                    my_bar.progress(p, text=t)
+                
+                # REEL ANCRAGE
+                if MOCK_MODE:
+                        result = {"success": True, "tx_hash": "0xMOCK_HASH_" + file_hash[:10], "timestamp": str(datetime.now()), "payload": f"Blob:{file_hash}|Owner:{author_name}"}
+                else:
+                    result = anchor_hash_on_polygon(file_hash, author_name, recipient_address)
+                
+                my_bar.progress(100, text="Terminé !")
 
-                    if result["success"]:
-                        st.balloons()
+                if result["success"]:
+                    st.balloons()
                         # SAUVEGARDE DU RÉSULTAT DANS LE STATE
                         st.session_state.proof_cache[file_hash] = result
                     else:
