@@ -34,8 +34,9 @@ COMPANY_WALLET_ADDRESS = Web3.to_checksum_address("0xd12ef43f0cd2e925d2d55ede9b8
 # RÉCUPÉRATION SÉCURISÉE DEPUIS .streamlit/secrets.toml
 try:
     COMPANY_PRIVATE_KEY = st.secrets["private_key"]
-except FileNotFoundError:
-    COMPANY_PRIVATE_KEY = "0x..." # Fallback pour éviter le crash si secrets.toml n'existe pas encore
+except (FileNotFoundError, KeyError):
+    # Fallback pour Render : On cherche dans les Variables d'Environnement
+    COMPANY_PRIVATE_KEY = os.environ.get("private_key", "0x...")
 
 
 # MOCK_MODE = False pour activer la vraie blockchain
