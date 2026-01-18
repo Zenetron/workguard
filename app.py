@@ -628,10 +628,10 @@ with tab1:
 
                 if result["success"]:
                     st.balloons()
-                        # SAUVEGARDE DU RÉSULTAT DANS LE STATE
-                        st.session_state.proof_cache[file_hash] = result
-                    else:
-                        st.error(f"Echec de l'ancrage : {result.get('error')}")
+                    # SAUVEGARDE DU RÉSULTAT DANS LE STATE
+                    st.session_state.proof_cache[file_hash] = result
+                else:
+                    st.error(f"Echec de l'ancrage : {result.get('error')}")
 
             # AFFICHAGE DU RÉSULTAT (PERSISTANT)
             if file_hash in st.session_state.proof_cache:
