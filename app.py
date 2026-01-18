@@ -280,11 +280,16 @@ with tab1:
                 
             with col2:
                 st.write("Scannez pour payer avec votre Wallet")
-                # QR Code standard : matic:ADDRESS
-                # Note: Le protocole s'appelle souvent encore "matic:" dans les wallets
-                payment_uri = f"matic:{COMPANY_WALLET_ADDRESS}?amount={cost_in_pol}"
+                # EIP-681 Format standard pour tous les wallets EVM (dont Phantom)
+                # ethereum:<address>@<chain_id>?value=<wei_amount>
+                amount_wei = int(cost_in_pol * 10**18)
+                payment_uri = f"ethereum:{COMPANY_WALLET_ADDRESS}@137?value={amount_wei}"
+                
+                # Fallback simple (juste l'adresse) si le format EIP-681 pose encore problème
+                # payment_uri = COMPANY_WALLET_ADDRESS 
+                
                 qr_img = generate_qr_code(payment_uri)
-                st.image(qr_img, width=200, caption="Scanner pour payer")
+                st.image(qr_img, width=200, caption="Scanner pour payer (Polygon Network)")
 
             st.warning("⚠️ Une fois le paiement envoyé, cliquez sur le bouton ci-dessous.")
 
