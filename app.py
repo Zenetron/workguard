@@ -499,7 +499,13 @@ def create_pdf_certificate(author_name, file_name, file_hash, tx_hash, timestamp
 # APPLICATION
 # -----------------------------------------------------------------------------
 
-st.title("WorkGuard")
+# IMPLÉMENTATION STANDARD
+# Logo Centré + Titre
+col_logo_1, col_logo_2, col_logo_3 = st.columns([1, 1, 1])
+with col_logo_2:
+    st.image("favicon.png", width=120)
+
+st.markdown("<h1 style='text-align: center; margin-top: -20px;'>WorkGuard</h1>", unsafe_allow_html=True)
 st.markdown("<h3 style='text-align: center;'>La Preuve d'Antériorité Décentralisée.</h3>", unsafe_allow_html=True)
 st.markdown("<p style='text-align: center;'>Protégez vos créations (Vidéos, Photos, Audios, Contrats) en les ancrant immuablement sur la Blockchain Polygon.</p>", unsafe_allow_html=True)
 st.markdown("---")
