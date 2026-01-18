@@ -398,6 +398,14 @@ def create_pdf_certificate(author_name, file_name, file_hash, tx_hash, timestamp
     pdf.set_line_width(0.5)
     pdf.rect(8, 8, 194, 281)
 
+    # AJOUT LOGO (Top Gauche)
+    try:
+        # On utilise le favicon généré (128x128)
+        # Position X=10, Y=10, Width=20
+        pdf.image("favicon.png", x=10, y=10, w=20)
+    except Exception as e:
+        print(f"Erreur Logo PDF: {e}")
+
     # AJOUT QR CODE (En PREMIER pour être sur la bonne page)
     try:
         # Lien direct vers la transaction
@@ -875,47 +883,47 @@ with tab2:
                  
                  # On active le mode manuel persistant
                  st.session_state['show_manual_search'] = True
-            
-            # Affichage persistant de la recherche manuelle
-            if st.session_state.get('show_manual_search'):
-                 st.markdown("---")
-                 with st.expander("🕵️‍♂️ Recherche Avancée (Manuelle)", expanded=True):
-                     st.info("Si la preuve est ancienne, collez l'ID de Transaction (TX) présent sur le certificat PDF.")
-                     
-                     with st.form("manual_verify_form"):
-                         check_tx_manual = st.text_input("ID de Transaction (TX Hash)", placeholder="0x...")
-                         submit_manual = st.form_submit_button("Vérifier avec le TX ID")
-                     
-                     if submit_manual:
-                         if not check_tx_manual:
-                             st.error("Veuillez entrer un TX Hash.")
-                         else:
-                            try:
-                                w3 = Web3(Web3.HTTPProvider(RPC_URL))
-                                tx = w3.eth.get_transaction(check_tx_manual)
-                                input_data = tx['input']
-                                try:
-                                    if isinstance(input_data, bytes):
-                                        decoded = input_data.decode('utf-8', errors='ignore')
-                                    else:
-                                        decoded = bytes.fromhex(input_data[2:]).decode('utf-8', errors='ignore')
-                                except:
-                                    decoded = str(input_data)
-                                    
-                                if f"Blob:{check_hash}" in decoded:
-                                    import re
-                                    match = re.search(r"Owner:([^|]+)", decoded)
-                                    owner_name = match.group(1) if match else "Inconnu"
-                                    
-                                    st.balloons()
-                                    st.success(f"✅ **PREUVE AUTHENTIQUE CONFIRMÉE !**")
-                                    st.markdown(f"### 👤 Propriétaire : **{owner_name}**")
-                                else:
-                                    st.error("❌ Ce TX ne correspond pas à ce fichier.")
-                                    st.write(f"Hash fichier: {check_hash}")
-                                    st.write(f"Data TX: {decoded}")
-                            except Exception as e:
-                                st.error(f"Erreur TX: {e}")
+    
+    # Affichage persistant de la recherche manuelle (DÉSINDENTÉ pour être hors du "if button")
+    if st.session_state.get('show_manual_search'):
+         st.markdown("---")
+         with st.expander("🕵️‍♂️ Recherche Avancée (Manuelle)", expanded=True):
+             st.info("Si la preuve est ancienne, collez l'ID de Transaction (TX) présent sur le certificat PDF.")
+             
+             with st.form("manual_verify_form"):
+                 check_tx_manual = st.text_input("ID de Transaction (TX Hash)", placeholder="0x...")
+                 submit_manual = st.form_submit_button("Vérifier avec le TX ID")
+             
+             if submit_manual:
+                 if not check_tx_manual:
+                     st.error("Veuillez entrer un TX Hash.")
+                 else:
+                    try:
+                        w3 = Web3(Web3.HTTPProvider(RPC_URL))
+                        tx = w3.eth.get_transaction(check_tx_manual)
+                        input_data = tx['input']
+                        try:
+                            if isinstance(input_data, bytes):
+                                decoded = input_data.decode('utf-8', errors='ignore')
+                            else:
+                                decoded = bytes.fromhex(input_data[2:]).decode('utf-8', errors='ignore')
+                        except:
+                            decoded = str(input_data)
+                            
+                        if f"Blob:{check_hash}" in decoded:
+                            import re
+                            match = re.search(r"Owner:([^|]+)", decoded)
+                            owner_name = match.group(1) if match else "Inconnu"
+                            
+                            st.balloons()
+                            st.success(f"✅ **PREUVE AUTHENTIQUE CONFIRMÉE !**")
+                            st.markdown(f"### 👤 Propriétaire : **{owner_name}**")
+                        else:
+                            st.error("❌ Ce TX ne correspond pas à ce fichier.")
+                            st.write(f"Hash fichier: {check_hash}")
+                            st.write(f"Data TX: {decoded}")
+                    except Exception as e:
+                        st.error(f"Erreur TX: {e}")
 
 st.markdown("---")
 st.caption("🔒 WorkGuard - Sécurisé par la Blockchain.")
