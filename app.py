@@ -461,7 +461,8 @@ with tab1:
         author_name = st.text_input("Votre Nom ou Pseudonyme (sera gravé sur la Blockchain)", placeholder="Ex: Satoshi Nakamoto")
         
         # AJOUT : Adresse Wallet Client (OBLIGATOIRE POUR SÉCURITÉ)
-        recipient_address = st.text_input("Votre Adresse Polygon (OBLIGATOIRE pour vérification)", placeholder="0x...")
+        st.caption("⚠️ **Attention** : Vous devez payer uniquement via le réseau **Polygon (MATIC)**. Les paiements via Ethereum (Base, Arbitrum, Mainnet) seront perdus.")
+        recipient_address = st.text_input("Votre Adresse Polygon (Réseau Polygon uniquement)", placeholder="0x...")
         
         if author_name and (recipient_address and len(recipient_address) >= 10):
             st.divider()
