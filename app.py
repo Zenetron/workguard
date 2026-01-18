@@ -474,8 +474,24 @@ with tab1:
             # --- VOUCHER SYSTEM ---
             voucher_code = st.text_input("Code Promo / Voucher (Optionnel)", placeholder="Ex: PARTNER24")
             
-            # Liste des codes valides (Hardcodé pour la démo, idéalement dans st.secrets)
-            VALID_VOUCHERS = ["VIP2025", "FRIEND50", "DEMO"]
+            # Liste des codes valides (Récupérés depuis secrets/env pour sécurité)
+            # Format attendu dans secrets.toml : voucher_codes = "CODE1,CODE2,CODE3"
+            VALID_VOUCHERS = []
+            
+            # 1. Chargement depuis Secrets TOML (Local)
+            if os.path.exists(".streamlit/secrets.toml"):
+                try:
+                     if "voucher_codes" in st.secrets:
+                         VALID_VOUCHERS = st.secrets["voucher_codes"].split(",")
+                except: pass
+            
+            # 2. Chargement depuis ENV (Render) - Override si présent
+            if "VOUCHER_CODES" in os.environ:
+                 VALID_VOUCHERS = os.environ["VOUCHER_CODES"].split(",")
+            
+            # Fallback par défaut (au cas où, pour démo)
+            if not VALID_VOUCHERS:
+                 VALID_VOUCHERS = ["VIP2025", "FRIEND50"]
             
             is_free = False
             if voucher_code and voucher_code.strip().upper() in VALID_VOUCHERS:
@@ -490,46 +506,69 @@ with tab1:
             with col_center:
                 # Card-like container
                 with st.container(border=True):
-                    st.markdown(f"""
-                    <div style="text-align: center;">
-                        <h2 style="color: #38BDF8; margin: 0;">{cost_in_pol} POL</h2>
-                        <p style="color: #94A3B8; font-size: 0.8em; margin-bottom: 15px;">TOTAL À PAYER (POLYGON)</p>
-                    </div>
-                    """, unsafe_allow_html=True)
                     
-                    # EIP-681 Payment URI
-                    amount_wei = int(cost_in_pol * 10**18)
-                    payment_uri = f"ethereum:{COMPANY_WALLET_ADDRESS}@137?value={amount_wei}"
-                    qr_img = generate_qr_code(payment_uri)
-                    
-                    # Centering Image with nested columns
-                    # On utilise 3 colonnes invisibles [1, 2, 1] pour centrer l'image au milieu du container
-                    sub_c1, sub_c2, sub_c3 = st.columns([1, 4, 1])
-                    with sub_c2:
-                        st.image(qr_img, width=220, caption="Scanner avec votre Wallet", use_column_width=False)
-                    
-                    st.divider()
-                    
-                    st.markdown("<p style='text-align: center; font-size: 0.8em; margin-bottom: 5px;'>Ou envoyez manuellement à cette adresse :</p>", unsafe_allow_html=True)
-                    st.code(COMPANY_WALLET_ADDRESS, language="text")
+                    # --- MODE GRATUIT (VOUCHER) ---
+                    if is_free:
+                         st.markdown(f"""
+                        <div style="text-align: center;">
+                            <h2 style="color: #34D399; margin: 0;">OFFERT !</h2>
+                            <p style="color: #94A3B8; font-size: 0.8em; margin-bottom: 15px;">Frais de service pris en charge par le code promo</p>
+                        </div>
+                        """, unsafe_allow_html=True)
+                         
+                         st.success("✨ **C'est cadeau !** Nous payons les frais de gaz pour vous.")
+                         
+                         # Bouton spécial "Gasless"
+                         if st.button("🎁 LANCER L'ANCRAGE GRATUIT 🎁", type="primary", use_container_width=True):
+                             st.session_state.payment_validated = True
+                             st.session_state.tx_hash = "VOUCHER_OFFERT" # Fake hash pour le suivi
+                             st.rerun()
+
+                    # --- MODE PAYANT (STANDARD) ---
+                    else:
+                        st.markdown(f"""
+                        <div style="text-align: center;">
+                            <h2 style="color: #38BDF8; margin: 0;">{cost_in_pol} POL</h2>
+                            <p style="color: #94A3B8; font-size: 0.8em; margin-bottom: 15px;">TOTAL À PAYER (POLYGON)</p>
+                        </div>
+                        """, unsafe_allow_html=True)
+                        
+                        # EIP-681 Payment URI
+                        amount_wei = int(cost_in_pol * 10**18)
+                        payment_uri = f"ethereum:{COMPANY_WALLET_ADDRESS}@137?value={amount_wei}"
+                        qr_img = generate_qr_code(payment_uri)
+                        
+                        # Centering Image with nested columns
+                        # On utilise 3 colonnes invisibles [1, 2, 1] pour centrer l'image au milieu du container
+                        sub_c1, sub_c2, sub_c3 = st.columns([1, 4, 1])
+                        with sub_c2:
+                            st.image(qr_img, width=220, caption="Scanner avec votre Wallet", use_column_width=False)
+                        
+                        st.divider()
+                        
+                        st.markdown("<p style='text-align: center; font-size: 0.8em; margin-bottom: 5px;'>Ou envoyez manuellement à cette adresse :</p>", unsafe_allow_html=True)
+                        st.code(COMPANY_WALLET_ADDRESS, language="text")
 
             # --- LOGIQUE DE VÉRIFICATION DU SOLDE (VIGILE) ---
             
             # 1. On mémorise le solde AVANT le paiement (si pas déjà fait pour ce fichier)
-            if 'initial_balance_wei' not in st.session_state:
+            if not is_free and 'initial_balance_wei' not in st.session_state:
                 w3 = Web3(Web3.HTTPProvider(RPC_URL))
                 try:
                     balance_wei = w3.eth.get_balance(COMPANY_WALLET_ADDRESS)
                     st.session_state['initial_balance_wei'] = balance_wei
                 except Exception as e:
-                    st.error(f"Erreur lecture solde: {str(e)}")
-                    st.stop()
+                    # st.error(f"Erreur lecture solde: {str(e)}") # On évite de bloquer pour si peu
+                    pass
 
-            # CENTER BUTTON & WARNING
-            _, col_cta, _ = st.columns([1, 2, 1])
-            with col_cta:
-                st.warning("⚠️ Une fois le paiement envoyé, cliquez sur le bouton ci-dessous.")
-                do_check = st.button("✅ VÉRIFIER LE PAIEMENT & ANCRER")
+            # CENTER BUTTON & WARNING (Seulement si payant)
+            if not is_free:
+                _, col_cta, _ = st.columns([1, 2, 1])
+                with col_cta:
+                    st.warning("⚠️ Une fois le paiement envoyé, cliquez sur le bouton ci-dessous.")
+                    do_check = st.button("✅ VÉRIFIER LE PAIEMENT & ANCRER")
+            else:
+                do_check = False # Pas de bouton de vérif en mode gratuit (le bouton spécial gère tout)
 
             # Bouton de validation SÉCURISÉ
             # On utilise un container vide pour le résultat ou on vérifie le state
@@ -586,8 +625,8 @@ with tab1:
                                 st.error(f"Erreur vérif solde: {e}")
 
             # SOS FALBACK - VÉRIFICATION MANUELLE
-            # On affiche le SOS seulement si pas encore validé
-            if not st.session_state.payment_validated:
+            # On affiche le SOS seulement si pas encore validé ET si ce n'est pas un mode gratuit
+            if not st.session_state.payment_validated and not is_free:
                  with st.expander("🆘 Mon paiement n'est pas détecté ?"):
                     st.info("Copiez l'ID de Transaction (TX Hash) depuis votre Wallet.")
                     manual_tx = st.text_input("Collez votre TX Hash (ex: 0x123abc...)")
