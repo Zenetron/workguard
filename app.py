@@ -870,9 +870,45 @@ with tab2:
                     link = f"https://polygonscan.com/tx/{proof['tx_hash']}"
                     st.markdown(f"[🔎 Voir la preuve officielle sur PolygonScan]({link})")
             else:
-                 st.error("❌ **Preuve introuvable.**")
-                 st.warning("Ce fichier n'a pas été trouvé dans l'historique récent de WorkGuard.")
-                 st.caption("Note : La recherche se limite aux 1000 dernières transactions.")
+                 st.error("❌ **Preuve introuvable via scan automatique.**")
+                 st.warning(f"Le fichier ayant le hash `{check_hash}` n'a pas été trouvé dans les 1000 dernières transactions.")
+                 
+                 st.markdown("---")
+                 st.markdown("### 🕵️‍♂️ Recherche Avancée (Manuelle)")
+                 st.info("Si la preuve est ancienne, collez l'ID de Transaction (TX) présent sur le certificat PDF.")
+                 
+                 check_tx_manual = st.text_input("ID de Transaction (TX Hash)", placeholder="0x...")
+                 
+                 if st.button("Vérifier avec le TX ID"):
+                     if not check_tx_manual:
+                         st.error("Veuillez entrer un TX Hash.")
+                     else:
+                        try:
+                            w3 = Web3(Web3.HTTPProvider(RPC_URL))
+                            tx = w3.eth.get_transaction(check_tx_manual)
+                            input_data = tx['input']
+                            try:
+                                if isinstance(input_data, bytes):
+                                    decoded = input_data.decode('utf-8', errors='ignore')
+                                else:
+                                    decoded = bytes.fromhex(input_data[2:]).decode('utf-8', errors='ignore')
+                            except:
+                                decoded = str(input_data)
+                                
+                            if f"Blob:{check_hash}" in decoded:
+                                import re
+                                match = re.search(r"Owner:([^|]+)", decoded)
+                                owner_name = match.group(1) if match else "Inconnu"
+                                
+                                st.balloons()
+                                st.success(f"✅ **PREUVE AUTHENTIQUE CONFIRMÉE !**")
+                                st.markdown(f"### 👤 Propriétaire : **{owner_name}**")
+                            else:
+                                st.error("❌ Ce TX ne correspond pas à ce fichier.")
+                                st.write(f"Hash fichier: {check_hash}")
+                                st.write(f"Data TX: {decoded}")
+                        except Exception as e:
+                            st.error(f"Erreur TX: {e}")
 
 st.markdown("---")
 st.caption("🔒 WorkGuard - Sécurisé par la Blockchain.")
