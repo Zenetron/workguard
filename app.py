@@ -341,8 +341,9 @@ def create_pdf_certificate(author_name, file_name, file_hash, tx_hash, timestamp
     # Header
     pdf.set_font("Arial", 'B', 24)
     pdf.set_text_color(23, 37, 84) # Dark Blue
-    # On pousse le titre vers le bas pour laisser la place au QR Code (QR à y=8, hauteur 30 -> finit à y=38)
-    pdf.cell(0, 50, "", ln=True) 
+    # On pousse le titre vers le bas de manière EXPLICITE (Force Y=45)
+    # Le QR code finit vers Y=38 (8 + 30).
+    pdf.set_y(45)
     pdf.cell(0, 10, "CERTIFICAT D'ANTÉRIORITÉ", 0, 1, 'C')
     pdf.set_font("Arial", '', 14)
     pdf.set_text_color(100, 116, 139) # Gray
@@ -401,9 +402,9 @@ def create_pdf_certificate(author_name, file_name, file_hash, tx_hash, timestamp
             tmp_path = tmp_file.name
             
         # Placement au CENTRE, EN HAUT (au-dessus du titre)
-        # Page A4 width = 210mm. Img width = 30mm. X = (210-30)/2 = 90.
-        # Y=8 pour être bien au-dessus du titre
-        pdf.image(tmp_path, x=90, y=8, w=30)
+        # Page A4 width = 210mm. Img width = 25mm. X = (210-25)/2 = 92.5.
+        # Y=10 pour laisser une marge
+        pdf.image(tmp_path, x=92.5, y=10, w=25)
         
         # Nettoyage
         os.unlink(tmp_path)
