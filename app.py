@@ -389,8 +389,8 @@ def create_pdf_certificate(author_name, file_name, file_hash, tx_hash, timestamp
             
         # Placement au CENTRE, EN HAUT (au-dessus du titre)
         # Page A4 width = 210mm. Img width = 30mm. X = (210-30)/2 = 90.
-        # Y = 12 (dans la marge haute)
-        pdf.image(tmp_path, x=90, y=12, w=30)
+        # Y=8 pour être bien au-dessus du titre
+        pdf.image(tmp_path, x=90, y=8, w=30)
         
         # Nettoyage
         os.unlink(tmp_path)
@@ -471,6 +471,19 @@ with tab1:
             # Prix Fixe en POL
             cost_in_pol = 20
             
+            # --- VOUCHER SYSTEM ---
+            voucher_code = st.text_input("Code Promo / Voucher (Optionnel)", placeholder="Ex: PARTNER24")
+            
+            # Liste des codes valides (Hardcodé pour la démo, idéalement dans st.secrets)
+            VALID_VOUCHERS = ["VIP2025", "FRIEND50", "DEMO"]
+            
+            is_free = False
+            if voucher_code and voucher_code.strip().upper() in VALID_VOUCHERS:
+                cost_in_pol = 0
+                is_free = True
+                st.success(f"✅ Code '{voucher_code.upper()}' appliqué ! Service GRATUIT (vous ne payez que le gaz).")
+            # ----------------------
+            
             # CENTERED LAYOUT
             _, col_center, _ = st.columns([1, 2, 1])  # Middle column is 2x width of sides
             
@@ -550,7 +563,7 @@ with tab1:
                                 st.session_state.tx_hash = tx_id # On stocke le hash
                                 st.success(f"✅ Paiement authentifié ! (TX: {tx_id[:10]}...)")
                             else:
-                                 st.error("❌ Aucun paiement trouvé venant de cette adresse dans les 5 dernières minutes.")
+                                 st.error("❌ Aucun paiement trouvé venant de cette adresse.")
                                  st.info("💡 Si vous avez payé il y a longtemps, utilisez le mode 'SOS' ci-dessous avec votre TX Hash.")
                                  
                     # MODE CLASSIQUE (Fallback) : Vérification du solde global
