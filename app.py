@@ -248,8 +248,16 @@ st.markdown("### La Preuve d'Antériorité Décentralisée.")
 st.markdown("Protégez vos créations (Design, Audio, Contrats) en les ancrant immuablement sur la Blockchain Polygon.")
 st.markdown("---")
 
-with st.expander("ℹ️ Guide & Mode d'Emploi - À LIRE AVANT D'UTILISER"):
-    st.markdown("""
+# IMPLÉMENTATION "MANUELLE" DE L'ACCORDÉON POUR ÉVITER LE BUG VISUEL
+if "show_help" not in st.session_state:
+    st.session_state.show_help = False
+
+if st.button(f"{'🔽' if st.session_state.show_help else '▶️'} Guide & Mode d'Emploi - À LIRE AVANT D'UTILISER"):
+    st.session_state.show_help = not st.session_state.show_help
+    st.rerun()
+
+if st.session_state.show_help:
+    st.info("""
     ### 🛡️ Comment ça marche ?
     WorkGuard crée une **Preuve d'Antériorité** irréfutable pour vos fichiers.
     
