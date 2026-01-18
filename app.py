@@ -313,8 +313,10 @@ def verify_manual_tx(tx_hash, expected_amount_pol, company_address, expected_sen
              
         return True, "OK"
     except Exception as e:
+    except Exception as e:
         return False, f"Transaction invalide ou introuvable : {str(e)}"
 
+def create_pdf_certificate(author_name, file_name, file_hash, tx_hash, timestamp):
     """Génère un PDF officiel pour le certificat."""
     pdf = FPDF()
     pdf.add_page()
