@@ -401,13 +401,12 @@ def create_pdf_certificate(author_name, file_name, file_hash, tx_hash, timestamp
     pdf.set_x(15)
     add_field("Transaction (TX) :", tx_hash)
     
-    pdf.ln(20)
+    pdf.ln(10)
     pdf.set_font("Arial", 'I', 10)
     pdf.set_text_color(100, 100, 100)
     pdf.multi_cell(0, 5, "Ce document certifie que l'empreinte numérique du fichier susmentionné a été ancrée de manière immuable sur la Blockchain Polygon à la date indiquée. La présence de cette transaction prouve l'existence du fichier à cet instant précis.", 0, 'C')
     
-    pdf.ln(20)
-    pdf.ln(20)
+    pdf.ln(10)
     pdf.set_font("Arial", 'B', 10)
     pdf.cell(0, 10, "Vérifiable sur : https://polygonscan.com/", 0, 1, 'C')
 
