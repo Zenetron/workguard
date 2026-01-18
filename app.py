@@ -598,6 +598,11 @@ with tab1:
             
             # Cas 1 : Bouton Principal
             if do_check:
+                # SÉCURITÉ : On exige une adresse valide pour vérifier l'origine
+                if not recipient_address or len(recipient_address) < 10:
+                     st.error("❌ Adresse invalide. Veuillez renseigner VOTRE adresse Polygon ci-dessus (section 2) pour l'identification.")
+                     st.stop()
+                     
                 if MOCK_MODE:
                     st.session_state.payment_validated = True
                 else:
@@ -647,7 +652,10 @@ with tab1:
                         submit_sos = st.form_submit_button("Vérifier manuellement cette transaction")
                     
                     if submit_sos:
-                        if MOCK_MODE:
+                        # SÉCURITÉ : On exige une adresse valide pour vérifier l'origine
+                        if not recipient_address or len(recipient_address) < 10:
+                             st.error("❌ Adresse invalide. Veuillez renseigner VOTRE adresse Polygon ci-dessus (section 2).")
+                        elif MOCK_MODE:
                             success, msg = True, "Mock OK"
                         else:
                             # On vérifie montant + expéditeur (si fourni)
