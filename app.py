@@ -191,10 +191,12 @@ def generate_qr_code(data):
     buf.seek(0)
     return buf
 
-def anchor_hash_on_polygon(file_hash, author_name):
+def anchor_hash_on_polygon(file_hash, author_name, recipient_address=None):
     """
     Envoie une transaction REAL sur Polygon pour ancrer le hash + le nom de l'auteur.
     Le champ 'data' contient : "Blob:{hash}|Owner:{name}"
+    Si recipient_address est fourni (et valide), la transaction est envoyée vers lui (0 POL).
+    Sinon, c'est une self-transaction.
     """
     try:
         w3 = Web3(Web3.HTTPProvider(RPC_URL))
@@ -217,9 +219,17 @@ def anchor_hash_on_polygon(file_hash, author_name):
         nonce = w3.eth.get_transaction_count(my_address, 'pending')
         gas_price = w3.eth.gas_price
         
+        # Validation de l'adresse destinataire (si fournie)
+        target_address = my_address # Par défaut : Self-transaction
+        if recipient_address and Web3.is_address(recipient_address):
+            try:
+                target_address = Web3.to_checksum_address(recipient_address)
+            except:
+                pass # On reste sur my_address si invalide
+
         tx = {
             'nonce': nonce,
-            'to': my_address, # Self-transaction
+            'to': target_address,  # VERS le client ou VERS nous-même
             'value': 0,
             'gas': 60000, # Augmenté pour être sûr
             'gasPrice': int(gas_price * 1.1), # +10% de pourboire pour passer devant
@@ -305,7 +315,11 @@ with tab1:
         
         st.divider()
         st.markdown("#### 2. Identité de l'Auteur")
+        st.markdown("#### 2. Identité de l'Auteur")
         author_name = st.text_input("Votre Nom ou Pseudonyme (sera gravé sur la Blockchain)", placeholder="Ex: Satoshi Nakamoto")
+        
+        # AJOUT : Adresse Wallet Client (Optionnel)
+        recipient_address = st.text_input("Votre Adresse Polygon (Optionnel) - Pour recevoir la preuve directement", placeholder="0x...")
         
         if author_name:
             st.divider()
@@ -406,7 +420,7 @@ with tab1:
                     if MOCK_MODE:
                          result = {"success": True, "tx_hash": "0xMOCK_HASH_" + file_hash[:10], "timestamp": str(datetime.now()), "payload": f"Blob:{file_hash}|Owner:{author_name}"}
                     else:
-                        result = anchor_hash_on_polygon(file_hash, author_name)
+                        result = anchor_hash_on_polygon(file_hash, author_name, recipient_address)
                     
                     my_bar.progress(100, text="Terminé !")
 
