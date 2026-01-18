@@ -587,8 +587,6 @@ with tab1:
 
             # Bouton de validation SÉCURISÉ
             # On utilise un container vide pour le résultat ou on vérifie le state
-            # Bouton de validation SÉCURISÉ
-            # On utilise un container vide pour le résultat ou on vérifie le state
             if "proof_cache" not in st.session_state:
                 st.session_state.proof_cache = {}
             
@@ -642,10 +640,13 @@ with tab1:
             # SOS FALBACK - VÉRIFICATION MANUELLE
             # On affiche le SOS seulement si pas encore validé ET si ce n'est pas un mode gratuit
             if not st.session_state.payment_validated and not is_free:
-                 with st.expander("🆘 Mon paiement n'est pas détecté ?"):
-                    st.info("Copiez l'ID de Transaction (TX Hash) depuis votre Wallet.")
-                    manual_tx = st.text_input("Collez votre TX Hash (ex: 0x123abc...)")
-                    if st.button("Vérifier manuellement cette transaction"):
+                 with st.expander("🆘 Mon paiement n'est pas détecté ?", expanded=False):
+                    with st.form("sos_form"):
+                        st.info("Copiez l'ID de Transaction (TX Hash) depuis votre Wallet.")
+                        manual_tx = st.text_input("Collez votre TX Hash (ex: 0x123abc...)")
+                        submit_sos = st.form_submit_button("Vérifier manuellement cette transaction")
+                    
+                    if submit_sos:
                         if MOCK_MODE:
                             success, msg = True, "Mock OK"
                         else:
