@@ -672,6 +672,7 @@ with tab1:
                         # SÉCURITÉ : On exige une adresse valide pour vérifier l'origine
                         if not recipient_address or len(recipient_address) < 10:
                              st.error("❌ Adresse invalide. Veuillez renseigner VOTRE adresse Polygon ci-dessus (section 2).")
+                             success = False
                         elif MOCK_MODE:
                             success, msg = True, "Mock OK"
                         else:
