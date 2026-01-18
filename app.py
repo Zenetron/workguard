@@ -414,8 +414,8 @@ def create_pdf_certificate(author_name, file_name, file_hash, tx_hash, timestamp
     # AJOUT LOGO (Top Gauche)
     try:
         # On utilise le favicon généré (128x128)
-        # Position X=10, Y=10, Width=20
-        pdf.image("favicon.png", x=10, y=10, w=20)
+        # Position X=10, Y=10, Width=35 (Plus gros)
+        pdf.image("favicon.png", x=10, y=10, w=35)
     except Exception as e:
         print(f"Erreur Logo PDF: {e}")
 
