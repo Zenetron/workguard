@@ -249,7 +249,6 @@ def anchor_hash_on_polygon(file_hash, author_name, recipient_address=None):
             "payload": payload
         }
     except Exception as e:
-    except Exception as e:
         return {"success": False, "error": str(e)}
 
 def create_pdf_certificate(author_name, file_name, file_hash, tx_hash, timestamp, payload):
