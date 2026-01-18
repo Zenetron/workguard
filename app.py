@@ -265,6 +265,32 @@ def anchor_hash_on_polygon(file_hash, author_name, recipient_address=None):
     except Exception as e:
         return {"success": False, "error": str(e)}
 
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+def scan_recent_blocks(expected_sender, expected_amount_pol, company_address, lookback_blocks=20):
+    """Scanne les derniers blocs pour trouver une transaction spécifique (Sécurité stricte)."""
+    try:
+        w3 = Web3(Web3.HTTPProvider(RPC_URL))
+        latest_block = w3.eth.block_number
+        
+        # On regarde les N derniers blocs
+        for block_num in range(latest_block, latest_block - lookback_blocks, -1):
+            block = w3.eth.get_block(block_num, full_transactions=True)
+            for tx in block.transactions:
+                # Vérification match
+                if (tx['to'] and tx['to'].lower() == company_address.lower()) and \
+                   (tx['from'].lower() == expected_sender.lower()):
+                    
+                    # Vérif montant
+                    val_eth = float(w3.from_wei(tx['value'], 'ether'))
+                    if val_eth >= (expected_amount_pol * 0.98):
+                        return True, tx['hash'].hex()
+                        
+        return False, None
+    except Exception as e:
+        return False, None
+
 def verify_manual_tx(tx_hash, expected_amount_pol, company_address, expected_sender=None):
     """Vérifie manuellement une transaction donnée par son hash."""
     try:
