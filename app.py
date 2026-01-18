@@ -12,6 +12,7 @@ from web3 import Web3
 
 from eth_account import Account
 from fpdf import FPDF
+import base64
 
 # -----------------------------------------------------------------------------
 # CONFIGURATION
@@ -500,13 +501,23 @@ def create_pdf_certificate(author_name, file_name, file_hash, tx_hash, timestamp
 # -----------------------------------------------------------------------------
 
 # IMPLÉMENTATION STANDARD
-# Logo Centré + Titre
-col_logo_1, col_logo_2, col_logo_3 = st.columns([1, 1, 1])
-with col_logo_2:
-    st.image("favicon.png", width=120)
+# Logo Centré + Titre (Base64 pour centrage parfait + désactivation click)
+try:
+    with open("favicon.png", "rb") as f:
+        data = base64.b64encode(f.read()).decode("utf-8")
+        st.markdown(
+            f"""
+            <div style='display: flex; justify-content: center; margin-bottom: 0px;'>
+                <img src="data:image/png;base64,{data}" width="120" style="pointer-events: none;">
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+except Exception as e:
+    st.error(f"Erreur chargement logo: {e}")
 
 st.markdown("<h1 style='text-align: center; margin-top: -20px;'>WorkGuard</h1>", unsafe_allow_html=True)
-st.markdown("<h3 style='text-align: center;'>La Preuve d'Antériorité Décentralisée.</h3>", unsafe_allow_html=True)
+st.markdown("<h3 style='text-align: center;'>La preuve d'antériorité Décentralisée.</h3>", unsafe_allow_html=True)
 st.markdown("<p style='text-align: center;'>Protégez vos créations (Vidéos, Photos, Audios, Contrats) en les ancrant immuablement sur la Blockchain Polygon.</p>", unsafe_allow_html=True)
 st.markdown("---")
 
