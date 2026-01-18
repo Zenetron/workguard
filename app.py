@@ -105,7 +105,15 @@ st.markdown("""
         color: #F8FAFC !important; 
         border-radius: 8px !important;
     }
-    .streamlit-expanderHeader svg { display: none !important; } /* Hide bugged arrow */
+    /* HIDE ALL ICONS AND ARROWS AGGRESSIVELY */
+    .streamlit-expanderHeader svg, .streamlit-expanderHeader i, [data-testid="stExpanderToggleIcon"] { 
+        display: none !important; 
+        opacity: 0 !important; 
+        width: 0 !important; 
+    }
+    
+    /* REMOVE "arrow" TEXT IF IT APPEARS AS CONTENT */
+    .streamlit-expanderHeader p { margin-left: 0 !important; }
     
     div[data-testid="stExpander"] { 
         border: 1px solid #1E293B; 
