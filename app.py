@@ -341,7 +341,8 @@ def create_pdf_certificate(author_name, file_name, file_hash, tx_hash, timestamp
     # Header
     pdf.set_font("Arial", 'B', 24)
     pdf.set_text_color(23, 37, 84) # Dark Blue
-    pdf.cell(0, 20, "", ln=True)
+    # On pousse le titre vers le bas pour laisser la place au QR Code (QR à y=8, hauteur 30 -> finit à y=38)
+    pdf.cell(0, 50, "", ln=True) 
     pdf.cell(0, 10, "CERTIFICAT D'ANTÉRIORITÉ", 0, 1, 'C')
     pdf.set_font("Arial", '', 14)
     pdf.set_text_color(100, 116, 139) # Gray
@@ -476,9 +477,8 @@ with tab1:
         st.caption("⚠️ **Attention** : Vous devez payer uniquement via le réseau **Polygon (MATIC / POL)**. Les paiements via Ethereum (Base, Arbitrum, Mainnet) seront perdus.")
         recipient_address = st.text_input("Votre Adresse Polygon (Réseau Polygon uniquement)", placeholder="0x...")
         
-        # UX : On est moins strict sur l'adresse ici pour permettre aux gens avec Voucher de mettre "0"
-        # La vérification stricte se fera au moment du paiement (si payant)
-        if author_name and recipient_address:
+        # UX : On affiche la suite si le NOM est rempli (l'adresse est optionnelle si Voucher)
+        if author_name:
             st.divider()
             st.markdown("#### 3. Paiement du Service")
             
