@@ -217,20 +217,29 @@ def generate_qr_code(data):
 def find_proof_in_history(target_hash):
     """
     Scanne l'historique du Wallet Company sur PolygonScan pour retrouver une preuve.
-    Retourne {success, tx_hash, timestamp, owner_name} ou None.
+    Retourne (proof_dict, debug_info_dict).
     """
+    debug_info = {"url": "", "status": "", "message": "", "tx_count": 0, "error": ""}
     try:
         # API PolygonScan (Gratuite, sans clé = limité à 5req/sec)
         # On récupère les 1000 dernières transactions (desc)
         url = f"https://api.polygonscan.com/api?module=account&action=txlist&address={COMPANY_WALLET_ADDRESS}&startblock=0&endblock=99999999&page=1&offset=1000&sort=desc"
+        debug_info["url"] = url
         
         response = requests.get(url, timeout=10)
         data = response.json()
         
+        debug_info["status"] = data.get('status')
+        debug_info["message"] = data.get('message')
+        
         if data['status'] != '1':
-            return None # Pas de data ou erreur
+            debug_info["error"] = f"API Error: {data.get('message')}"
+            return None, debug_info # Pas de data ou erreur
             
-        for tx in data['result']:
+        txs = data['result']
+        debug_info["tx_count"] = len(txs)
+        
+        for tx in txs:
             input_data = tx.get('input', '')
             
             # Si input vide ou trop court, on skip
@@ -250,19 +259,21 @@ def find_proof_in_history(target_hash):
                 match = re.search(r"Owner:([^|]+)", decoded)
                 owner_name = match.group(1) if match else "Inconnu"
                 
-                return {
+                proof_data = {
                     "success": True,
                     "tx_hash": tx['hash'],
                     "timestamp": datetime.fromtimestamp(int(tx['timeStamp'])),
                     "owner_name": owner_name,
                     "payload": decoded
                 }
+                return proof_data, debug_info
                 
-        return None # Pas trouvé dans les 1000 dernières
+        return None, debug_info # Pas trouvé dans les 1000 dernières
         
     except Exception as e:
+        debug_info["error"] = str(e)
         print(f"Erreur Scan History: {e}")
-        return None
+        return None, debug_info
 
 def anchor_hash_on_polygon(file_hash, author_name, recipient_address=None):
     """
@@ -857,7 +868,7 @@ with tab2:
         
         if st.button("🔍 Rechercher le Propriétaire (Reverse Search)"):
             with st.spinner("🕵️‍♂️ Scan de la Blockchain en cours..."):
-                proof = find_proof_in_history(check_hash)
+                proof, debug_info = find_proof_in_history(check_hash)
                 
             if proof:
                 st.balloons()
@@ -880,6 +891,17 @@ with tab2:
             else:
                  st.error("❌ **Preuve introuvable via scan automatique.**")
                  st.warning(f"Le fichier ayant le hash `{check_hash}` n'a pas été trouvé dans les 1000 dernières transactions.")
+                 
+                 # DEBUG INFO
+                 with st.expander("🛠 Détails Techniques (Debug)", expanded=False):
+                     st.write("**Statut API** :", debug_info.get('status'), "| **Message** :", debug_info.get('message'))
+                     st.write("**Transactions Scannées** :", debug_info.get('tx_count'))
+                     st.write("**Erreur éventuelle** :", debug_info.get('error'))
+                     st.write("**Wallet Scanné** :", COMPANY_WALLET_ADDRESS)
+                     st.info("Astuce : Si le nombre de TX est 0 ou si l'API status est != 1, le service PolygonScan est peut-être saturé.")
+                 
+                 # On active le mode manuel persistant
+                 st.session_state['show_manual_search'] = True
                  
                  # On active le mode manuel persistant
                  st.session_state['show_manual_search'] = True
