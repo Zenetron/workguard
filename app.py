@@ -342,7 +342,7 @@ def create_pdf_certificate(author_name, file_name, file_hash, tx_hash, timestamp
 # APPLICATION
 # -----------------------------------------------------------------------------
 
-st.title("🛡️ WorkGuard")
+st.title("WorkGuard")
 st.markdown("### La Preuve d'Antériorité Décentralisée.")
 st.markdown("Protégez vos créations (Vidéos, Photos, Audios, Contrats) en les ancrant immuablement sur la Blockchain Polygon.")
 st.markdown("---")
