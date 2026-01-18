@@ -468,8 +468,8 @@ with tab1:
         st.markdown("#### 2. Identité de l'Auteur")
         author_name = st.text_input("Votre Nom ou Pseudonyme (sera gravé sur la Blockchain)", placeholder="Ex: Satoshi Nakamoto")
         
-        # AJOUT : Adresse Wallet Client (Optionnel)
-        recipient_address = st.text_input("Votre Adresse Polygon (Optionnel) - Pour recevoir la preuve directement", placeholder="0x...")
+        # AJOUT : Adresse Wallet Client (OBLIGATOIRE POUR SÉCURITÉ)
+        recipient_address = st.text_input("Votre Adresse Polygon (OBLIGATOIRE pour vérification)", placeholder="0x...")
         
         if author_name:
             st.divider()
@@ -496,8 +496,11 @@ with tab1:
                     payment_uri = f"ethereum:{COMPANY_WALLET_ADDRESS}@137?value={amount_wei}"
                     qr_img = generate_qr_code(payment_uri)
                     
-                    # Centering Image
-                    st.image(qr_img, width=220, caption="Scanner depuis votre app (Phantom, MetaMask...)", use_column_width=False)
+                    # Centering Image with nested columns
+                    # On utilise 3 colonnes invisibles [1, 2, 1] pour centrer l'image au milieu du container
+                    sub_c1, sub_c2, sub_c3 = st.columns([1, 4, 1])
+                    with sub_c2:
+                        st.image(qr_img, width=220, caption="Scanner avec votre Wallet", use_column_width=False)
                     
                     st.divider()
                     
