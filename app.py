@@ -252,9 +252,11 @@ st.markdown("---")
 if "show_help" not in st.session_state:
     st.session_state.show_help = False
 
-if st.button(f"{'🔽' if st.session_state.show_help else '▶️'} Guide & Mode d'Emploi - À LIRE AVANT D'UTILISER"):
-    st.session_state.show_help = not st.session_state.show_help
-    st.rerun()
+_, col_help, _ = st.columns([1, 10, 1]) # Centrage large
+with col_help:
+    if st.button(f"{'🔽' if st.session_state.show_help else '▶️'} Guide & Mode d'Emploi - À LIRE AVANT D'UTILISER", use_container_width=True):
+        st.session_state.show_help = not st.session_state.show_help
+        st.rerun()
 
 if st.session_state.show_help:
     st.info("""
@@ -424,9 +426,11 @@ with tab1:
                 if "show_cert" not in st.session_state:
                     st.session_state.show_cert = True
                 
-                if st.button(f"{'🔽' if st.session_state.show_cert else '▶️'} Voir le Certificat de Preuve"):
-                    st.session_state.show_cert = not st.session_state.show_cert
-                    st.rerun()
+                _, col_cert, _ = st.columns([1, 2, 1])
+                with col_cert:
+                    if st.button(f"{'🔽' if st.session_state.show_cert else '▶️'} Voir le Certificat de Preuve", use_container_width=True):
+                        st.session_state.show_cert = not st.session_state.show_cert
+                        st.rerun()
                 
                 if st.session_state.show_cert:
                     with st.container(border=True):
