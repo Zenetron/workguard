@@ -508,7 +508,7 @@ try:
         st.markdown(
             f"""
             <div style='display: flex; justify-content: center; margin-bottom: 0px;'>
-                <img src="data:image/png;base64,{data}" width="120" style="pointer-events: none;">
+                <img src="data:image/png;base64,{data}" width="120" style="pointer-events: none; margin-left: 10px;">
             </div>
             """,
             unsafe_allow_html=True
