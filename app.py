@@ -267,32 +267,31 @@ with tab1:
             # Prix Fixe en POL
             cost_in_pol = 20
             
-            col1, col2 = st.columns(2)
-            with col1:
-                st.markdown(f"""
-                <div style="background-color: #0F172A; padding: 20px; border-radius: 10px; border: 1px solid #1E293B; text-align: center;">
-                    <h3 style="color: #38BDF8; margin: 0;">{cost_in_pol} POL</h3>
-                    <p style="margin: 0; font-size: 0.9em;">(ancien MATIC)</p>
-                    <hr style="border-color: #334155; margin: 10px 0;">
-                    <p style="font-size: 0.8em;">Frais de gaz inclus • Ancrage à vie</p>
-                </div>
-                """, unsafe_allow_html=True)
-                
-            with col2:
-                st.write("Scannez pour payer avec votre Wallet")
-                # EIP-681 Format standard pour tous les wallets EVM (dont Phantom)
-                # ethereum:<address>@<chain_id>?value=<wei_amount>
-                amount_wei = int(cost_in_pol * 10**18)
-                payment_uri = f"ethereum:{COMPANY_WALLET_ADDRESS}@137?value={amount_wei}"
-                
-                # Fallback simple (juste l'adresse) si le format EIP-681 pose encore problème
-                # payment_uri = COMPANY_WALLET_ADDRESS 
-                
-                qr_img = generate_qr_code(payment_uri)
-                st.image(qr_img, width=200, caption="Scanner pour payer (Polygon Network)")
-                
-                st.caption("Problème avec le QR Code ? Copiez l'adresse ci-dessous :")
-                st.code(COMPANY_WALLET_ADDRESS, language="text")
+            # CENTERED LAYOUT
+            _, col_center, _ = st.columns([1, 2, 1])  # Middle column is 2x width of sides
+            
+            with col_center:
+                # Card-like container
+                with st.container(border=True):
+                    st.markdown(f"""
+                    <div style="text-align: center;">
+                        <h2 style="color: #38BDF8; margin: 0;">{cost_in_pol} POL</h2>
+                        <p style="color: #94A3B8; font-size: 0.8em; margin-bottom: 15px;">TOTAL À PAYER (POLYGON)</p>
+                    </div>
+                    """, unsafe_allow_html=True)
+                    
+                    # EIP-681 Payment URI
+                    amount_wei = int(cost_in_pol * 10**18)
+                    payment_uri = f"ethereum:{COMPANY_WALLET_ADDRESS}@137?value={amount_wei}"
+                    qr_img = generate_qr_code(payment_uri)
+                    
+                    # Centering Image
+                    st.image(qr_img, width=220, caption="Scanner depuis votre app (Phantom, MetaMask...)", use_column_width=False)
+                    
+                    st.divider()
+                    
+                    st.markdown("<p style='text-align: center; font-size: 0.8em; margin-bottom: 5px;'>Ou envoyez manuellement à cette adresse :</p>", unsafe_allow_html=True)
+                    st.code(COMPANY_WALLET_ADDRESS, language="text")
 
             st.warning("⚠️ Une fois le paiement envoyé, cliquez sur le bouton ci-dessous.")
 
