@@ -290,6 +290,9 @@ with tab1:
                 
                 qr_img = generate_qr_code(payment_uri)
                 st.image(qr_img, width=200, caption="Scanner pour payer (Polygon Network)")
+                
+                st.caption("Problème avec le QR Code ? Copiez l'adresse ci-dessous :")
+                st.code(COMPANY_WALLET_ADDRESS, language="text")
 
             st.warning("⚠️ Une fois le paiement envoyé, cliquez sur le bouton ci-dessous.")
 
