@@ -226,7 +226,9 @@ def find_proof_in_history(target_hash):
         url = f"https://api.polygonscan.com/api?module=account&action=txlist&address={COMPANY_WALLET_ADDRESS}&startblock=0&endblock=99999999&page=1&offset=1000&sort=desc"
         debug_info["url"] = url
         
-        response = requests.get(url, timeout=10)
+        # Ajout du User-Agent pour éviter le blocage 403/NOTOK
+        headers = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36"}
+        response = requests.get(url, headers=headers, timeout=10)
         data = response.json()
         
         debug_info["status"] = data.get('status')
