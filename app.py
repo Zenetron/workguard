@@ -500,30 +500,28 @@ def create_pdf_certificate(author_name, file_name, file_hash, tx_hash, timestamp
 # -----------------------------------------------------------------------------
 
 st.title("WorkGuard")
-st.markdown("### La Preuve d'Antériorité Décentralisée.")
-st.markdown("Protégez vos créations (Vidéos, Photos, Audios, Contrats) en les ancrant immuablement sur la Blockchain Polygon.")
+st.markdown("<h3 style='text-align: center;'>La Preuve d'Antériorité Décentralisée.</h3>", unsafe_allow_html=True)
+st.markdown("<p style='text-align: center;'>Protégez vos créations (Vidéos, Photos, Audios, Contrats) en les ancrant immuablement sur la Blockchain Polygon.</p>", unsafe_allow_html=True)
 st.markdown("---")
 
 # IMPLÉMENTATION STANDARD (Car fixée par CSS)
 with st.expander("ℹ️ Guide & Mode d'Emploi - À LIRE AVANT D'UTILISER"):
-    st.info("""
-    ### 🛡️ Comment ça marche ?
-    WorkGuard crée une **Preuve d'Antériorité** irréfutable pour vos fichiers.
-    
-    1.  **Empreinte Numérique** : Nous calculons le "Hash" (SHA-256) de votre fichier. C'est comme son empreinte digitale unique.
-    2.  **Ancrage Blockchain** : Ce Hash est envoyé sur la Blockchain Polygon. Comme la Blockchain est ineffaçable, cela prouve que ce fichier existait à cette date précise.
-    3.  **Paternité (Votre Nom)** : Nous inscrivons aussi votre **Nom** (ou Pseudo) à côté de l'empreinte pour prouver que c'est VOUS l'auteur.
-    4.  **Confidentialité** : Votre fichier **reste sur votre ordinateur**. Seul le Hash crypté est publié.
-    5.  **Votre Preuve** : Vous pouvez **ajouter votre adresse Wallet** pour recevoir la preuve directement chez vous, ou simplement copier le Certificat généré à la fin.
-    
-    ### ⚠️ RÈGLE D'OR : NE MODIFIEZ PAS VOTRE FICHIER
-    Pour prouver que vous êtes l'auteur, vous devrez présenter **exactement le même fichier** dans le futur.
-    
-    *   Si vous changez un seul pixel, une virgule, ou un métadonnée, **le Hash changera**.
-    *   La preuve ne fonctionnera plus pour ce nouveau fichier.
-    
-    👉 **Conseil :** Archivez une copie originale de votre œuvre dans un dossier sûr (ex: "Mes Créations Protégées") et n'y touchez plus.
-    """)
+    st.markdown("""
+    <div style="text-align: center; background-color: rgba(56, 189, 248, 0.1); padding: 20px; border-radius: 10px; border: 1px solid #38BDF8;">
+        <h3 style="margin-top: 0;">🛡️ Comment ça marche ?</h3>
+        <p>WorkGuard crée une <strong>Preuve d'Antériorité</strong> irréfutable pour vos fichiers.</p>
+        <ul style="list-style-position: inside; text-align: left; display: inline-block;">
+            <li><strong>Empreinte Numérique</strong> : Hash SHA-256 unique.</li>
+            <li><strong>Ancrage Blockchain</strong> : Preuve ineffaçable sur Polygon.</li>
+            <li><strong>Paternité</strong> : Votre Nom gravé à jamais.</li>
+            <li><strong>Confidentialité</strong> : Vos fichiers restent chez vous.</li>
+        </ul>
+        <br><br>
+        <h4>⚠️ RÈGLE D'OR : NE MODIFIEZ PAS VOTRE FICHIER</h4>
+        <p>Un seul pixel changé = Hash différent = Preuve invalide.</p>
+        <p>👉 <strong>Conseil :</strong> Archivez l'original précieusement.</p>
+    </div>
+    """, unsafe_allow_html=True)
 
 # CHECK CONFIGURATION
 if not MOCK_MODE and (COMPANY_PRIVATE_KEY == "0x..." or "YourCompany" in COMPANY_WALLET_ADDRESS):
