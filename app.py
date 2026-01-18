@@ -873,42 +873,49 @@ with tab2:
                  st.error("❌ **Preuve introuvable via scan automatique.**")
                  st.warning(f"Le fichier ayant le hash `{check_hash}` n'a pas été trouvé dans les 1000 dernières transactions.")
                  
+                 # On active le mode manuel persistant
+                 st.session_state['show_manual_search'] = True
+            
+            # Affichage persistant de la recherche manuelle
+            if st.session_state.get('show_manual_search'):
                  st.markdown("---")
-                 st.markdown("### 🕵️‍♂️ Recherche Avancée (Manuelle)")
-                 st.info("Si la preuve est ancienne, collez l'ID de Transaction (TX) présent sur le certificat PDF.")
-                 
-                 check_tx_manual = st.text_input("ID de Transaction (TX Hash)", placeholder="0x...")
-                 
-                 if st.button("Vérifier avec le TX ID"):
-                     if not check_tx_manual:
-                         st.error("Veuillez entrer un TX Hash.")
-                     else:
-                        try:
-                            w3 = Web3(Web3.HTTPProvider(RPC_URL))
-                            tx = w3.eth.get_transaction(check_tx_manual)
-                            input_data = tx['input']
+                 with st.expander("🕵️‍♂️ Recherche Avancée (Manuelle)", expanded=True):
+                     st.info("Si la preuve est ancienne, collez l'ID de Transaction (TX) présent sur le certificat PDF.")
+                     
+                     with st.form("manual_verify_form"):
+                         check_tx_manual = st.text_input("ID de Transaction (TX Hash)", placeholder="0x...")
+                         submit_manual = st.form_submit_button("Vérifier avec le TX ID")
+                     
+                     if submit_manual:
+                         if not check_tx_manual:
+                             st.error("Veuillez entrer un TX Hash.")
+                         else:
                             try:
-                                if isinstance(input_data, bytes):
-                                    decoded = input_data.decode('utf-8', errors='ignore')
+                                w3 = Web3(Web3.HTTPProvider(RPC_URL))
+                                tx = w3.eth.get_transaction(check_tx_manual)
+                                input_data = tx['input']
+                                try:
+                                    if isinstance(input_data, bytes):
+                                        decoded = input_data.decode('utf-8', errors='ignore')
+                                    else:
+                                        decoded = bytes.fromhex(input_data[2:]).decode('utf-8', errors='ignore')
+                                except:
+                                    decoded = str(input_data)
+                                    
+                                if f"Blob:{check_hash}" in decoded:
+                                    import re
+                                    match = re.search(r"Owner:([^|]+)", decoded)
+                                    owner_name = match.group(1) if match else "Inconnu"
+                                    
+                                    st.balloons()
+                                    st.success(f"✅ **PREUVE AUTHENTIQUE CONFIRMÉE !**")
+                                    st.markdown(f"### 👤 Propriétaire : **{owner_name}**")
                                 else:
-                                    decoded = bytes.fromhex(input_data[2:]).decode('utf-8', errors='ignore')
-                            except:
-                                decoded = str(input_data)
-                                
-                            if f"Blob:{check_hash}" in decoded:
-                                import re
-                                match = re.search(r"Owner:([^|]+)", decoded)
-                                owner_name = match.group(1) if match else "Inconnu"
-                                
-                                st.balloons()
-                                st.success(f"✅ **PREUVE AUTHENTIQUE CONFIRMÉE !**")
-                                st.markdown(f"### 👤 Propriétaire : **{owner_name}**")
-                            else:
-                                st.error("❌ Ce TX ne correspond pas à ce fichier.")
-                                st.write(f"Hash fichier: {check_hash}")
-                                st.write(f"Data TX: {decoded}")
-                        except Exception as e:
-                            st.error(f"Erreur TX: {e}")
+                                    st.error("❌ Ce TX ne correspond pas à ce fichier.")
+                                    st.write(f"Hash fichier: {check_hash}")
+                                    st.write(f"Data TX: {decoded}")
+                            except Exception as e:
+                                st.error(f"Erreur TX: {e}")
 
 st.markdown("---")
 st.caption("🔒 WorkGuard - Sécurisé par la Blockchain.")
