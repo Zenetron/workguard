@@ -402,8 +402,10 @@ def verify_manual_tx(tx_hash, expected_amount_pol, company_address, expected_sen
     except Exception as e:
         return False, f"Transaction invalide ou introuvable : {str(e)}"
 
-def create_pdf_certificate(author_name, file_name, file_hash, tx_hash, timestamp, payload):
+def create_pdf_certificate(author_name, file_name, file_hash, tx_hash, timestamp, payload, lang="fr"):
     """Génère un PDF officiel pour le certificat."""
+    T_PDF = TRANSLATIONS[lang]
+    
     pdf = FPDF()
     pdf.add_page()
     
@@ -453,10 +455,10 @@ def create_pdf_certificate(author_name, file_name, file_hash, tx_hash, timestamp
     # On pousse le titre vers le bas de manière EXPLICITE (Force Y=45)
     # Le QR code finit vers Y=38 (8 + 30).
     pdf.set_y(45)
-    pdf.cell(0, 10, "CERTIFICAT D'ANTÉRIORITÉ", 0, 1, 'C')
+    pdf.cell(0, 10, T_PDF['pdf_title'], 0, 1, 'C')
     pdf.set_font("Arial", '', 14)
     pdf.set_text_color(100, 116, 139) # Gray
-    pdf.cell(0, 10, "WorkGuard - Blockchain Polygon", 0, 1, 'C')
+    pdf.cell(0, 10, T_PDF['pdf_subtitle'], 0, 1, 'C')
     pdf.ln(20)
     
     # Details Body
@@ -469,29 +471,29 @@ def create_pdf_certificate(author_name, file_name, file_hash, tx_hash, timestamp
         pdf.multi_cell(0, 10, value)
         pdf.ln(5)
 
-    add_field("Propriétaire :", author_name)
-    add_field("Fichier :", file_name)
-    add_field("Date d'ancrage :", str(timestamp))
+    add_field(T_PDF['pdf_owner'], author_name)
+    add_field(T_PDF['pdf_file'], file_name)
+    add_field(T_PDF['pdf_date'], str(timestamp))
     pdf.ln(5)
     
     pdf.set_fill_color(241, 245, 249)
     pdf.rect(10, pdf.get_y(), 190, 25, 'F')
     pdf.set_y(pdf.get_y() + 5)
     pdf.set_x(15)
-    add_field("Empreinte (Hash) :", file_hash)
+    add_field(T_PDF['pdf_hash'], file_hash)
     
     pdf.ln(5)
     pdf.set_x(15)
-    add_field("Transaction (TX) :", tx_hash)
+    add_field(T_PDF['pdf_tx'], tx_hash)
     
     pdf.ln(10)
     pdf.set_font("Arial", 'I', 10)
     pdf.set_text_color(100, 100, 100)
-    pdf.multi_cell(0, 5, "Ce document certifie que l'empreinte numérique du fichier susmentionné a été ancrée de manière immuable sur la Blockchain Polygon à la date indiquée. La présence de cette transaction prouve l'existence du fichier à cet instant précis.", 0, 'C')
+    pdf.multi_cell(0, 5, T_PDF['pdf_disclaimer'], 0, 'C')
     
     pdf.ln(10)
     pdf.set_font("Arial", 'B', 10)
-    pdf.cell(0, 10, "Vérifiable sur : https://polygonscan.com/", 0, 1, 'C')
+    pdf.cell(0, 10, T_PDF['pdf_footer'], 0, 1, 'C')
 
 
     
@@ -776,17 +778,17 @@ with tab1:
             if st.session_state.payment_validated and file_hash not in st.session_state.proof_cache:
                 
                 # Si on a pas de TX hash (mode classique), on met un placeholder
-                 if "tx_hash" not in st.session_state:
-                      st.session_state.tx_hash = "Non spécifié (Mode Solde)"
-                      
-                 st.info(T['info_anchoring'])
+                if "tx_hash" not in st.session_state:
+                     st.session_state.tx_hash = "Non spécifié (Mode Solde)"
                      
-                 my_bar = st.progress(0, text=T['progress_conn'])
-                 steps = [(30, T['progress_sign']), (60, T['progress_broadcast']), (90, T['progress_confirm'])]
-                 
-                 for p, t in steps:
-                     time.sleep(0.5)
-                     my_bar.progress(p, text=t)
+                st.info(T['info_anchoring'])
+                    
+                my_bar = st.progress(0, text=T['progress_conn'])
+                steps = [(30, T['progress_sign']), (60, T['progress_broadcast']), (90, T['progress_confirm'])]
+                
+                for p, t in steps:
+                    time.sleep(0.5)
+                    my_bar.progress(p, text=t)
                 
                 # REEL ANCRAGE
                 if MOCK_MODE:
@@ -864,43 +866,42 @@ with tab1:
 
 # --- ONGLET 2 : VÉRIFICATION ---
 with tab2:
-    st.markdown("#### Vérifier l'authenticité d'un fichier")
-    st.info("ℹ️ Ce moteur recherche la preuve directement dans l'historique de notre Blockchain.")
+    st.markdown(T['verify_intro'])
+    uploaded_check = st.file_uploader(T['upload_label'] + " (Check)", type=['png', 'jpg', 'jpeg', 'pdf', 'mp3', 'wav', 'mp4', 'mov', 'avi', 'mkv'], key="check")
     
-    check_file = st.file_uploader("Upload le fichier à vérifier", key="verify")
-    
-    if check_file:
-        check_hash = calculate_file_hash(check_file)
-        st.write(f"**Empreinte (Hash)** : `{check_hash}`")
+    if uploaded_check:
+        check_hash = calculate_file_hash(uploaded_check)
+        st.write(T['hash_label'])
+        st.code(check_hash, language="text")
         
-        if st.button("🔍 Rechercher le Propriétaire (Reverse Search)"):
-            with st.spinner("🕵️‍♂️ Scan de la Blockchain en cours..."):
+        if st.button(T['btn_reverse_search']):
+            with st.spinner(T['spinner_scan']):
                 proof, debug_info = find_proof_in_history(check_hash)
                 
             if proof:
                 st.balloons()
-                st.success(f"✅ **PREUVE AUTHENTIQUE TROUVÉE !**")
+                st.success(T['success_found'])
                 
                 # Joli affichage
                 with st.container(border=True):
-                    st.markdown(f"### 👤 Propriétaire : **{proof['owner_name']}**")
-                    st.markdown(f"📅 **Date d'ancrage** : {proof['timestamp']}")
+                    st.markdown(T['owner_label'].format(name=proof['owner_name']))
+                    st.markdown(T['date_label'].format(date=proof['timestamp']))
                     
                     st.divider()
-                    st.write("**Data Brute Blockchain**")
+                    st.write(T['raw_data_label'])
                     st.code(proof['payload'])
                     
-                    st.write("**ID Transaction**")
+                    st.write(T['tx_id_label'])
                     st.code(proof['tx_hash'])
                     
                     link = f"https://polygonscan.com/tx/{proof['tx_hash']}"
-                    st.markdown(f"[🔎 Voir la preuve officielle sur PolygonScan]({link})")
+                    st.markdown(T['link_label'].format(link=link))
             else:
-                 st.error("❌ **Preuve introuvable via scan automatique.**")
-                 st.warning(f"Le fichier ayant le hash `{check_hash}` n'a pas été trouvé dans les 1000 dernières transactions.")
+                 st.error(T['err_verify_fail'])
+                 st.warning(T['warn_verify_fail'].format(hash=check_hash))
                  
                  # DEBUG INFO
-                 with st.expander("🛠 Détails Techniques (Debug)", expanded=False):
+                 with st.expander(T['expander_debug'], expanded=False):
                      st.write("**Statut API** :", debug_info.get('status'), "| **Message** :", debug_info.get('message'))
                      st.write("**Transactions Scannées** :", debug_info.get('tx_count'))
                      st.write("**Erreur éventuelle** :", debug_info.get('error'))
@@ -909,19 +910,16 @@ with tab2:
                  
                  # On active le mode manuel persistant
                  st.session_state['show_manual_search'] = True
-                 
-                 # On active le mode manuel persistant
-                 st.session_state['show_manual_search'] = True
     
     # Affichage persistant de la recherche manuelle (DÉSINDENTÉ pour être hors du "if button")
     if st.session_state.get('show_manual_search'):
          st.markdown("---")
-         with st.expander("🕵️‍♂️ Recherche Avancée (Manuelle)", expanded=True):
-             st.info("Si la preuve est ancienne, collez l'ID de Transaction (TX) présent sur le certificat PDF.")
+         with st.expander(T['manual_search_title'], expanded=True):
+             st.info(T['manual_search_info'])
              
              with st.form("manual_verify_form"):
-                 check_tx_manual = st.text_input("ID de Transaction (TX Hash)", placeholder="0x...")
-                 submit_manual = st.form_submit_button("Vérifier avec le TX ID")
+                 check_tx_manual = st.text_input(T['manual_tx_label'], placeholder="0x...")
+                 submit_manual = st.form_submit_button(T['btn_verify_manual'])
              
              if submit_manual:
                  if not check_tx_manual:
@@ -945,10 +943,10 @@ with tab2:
                             owner_name = match.group(1) if match else "Inconnu"
                             
                             st.balloons()
-                            st.success(f"✅ **PREUVE AUTHENTIQUE CONFIRMÉE !**")
-                            st.markdown(f"### 👤 Propriétaire : **{owner_name}**")
+                            st.success(T['success_found'])
+                            st.markdown(T['owner_label'].format(name=owner_name))
                         else:
-                            st.error("❌ Ce TX ne correspond pas à ce fichier.")
+                            st.error(T['err_tx_mismatch'])
                             st.write(f"Hash fichier: {check_hash}")
                             st.write(f"Data TX: {decoded}")
                     except Exception as e:
