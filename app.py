@@ -176,6 +176,16 @@ st.markdown("""
 # FONCTIONS MÉTIER
 # -----------------------------------------------------------------------------
 
+# -----------------------------------------------------------------------------
+# GLOBAL STATE (ANTI-REPLAY CACHE)
+# -----------------------------------------------------------------------------
+@st.cache_resource
+def get_used_tx_registry():
+    """Retourne un set partagé pour stocker les TX déjà utilisées."""
+    return set()
+
+used_tx_registry = get_used_tx_registry()
+
 def calculate_file_hash(uploaded_file):
     sha256_hash = hashlib.sha256()
     for byte_block in iter(lambda: uploaded_file.read(4096), b""):
@@ -616,9 +626,16 @@ with tab1:
                         with st.spinner(f"🔍 Scan des 120 derniers blocs (~5 min) de {recipient_address}..."):
                             found, tx_id = scan_recent_blocks(recipient_address, cost_in_pol, COMPANY_WALLET_ADDRESS)
                             if found:
-                                st.session_state.payment_validated = True
-                                st.session_state.tx_hash = tx_id # On stocke le hash
-                                st.success(f"✅ Paiement authentifié ! (TX: {tx_id[:10]}...)")
+                                # ANTI-REPLAY CHECK
+                                if tx_id in used_tx_registry:
+                                     st.error("⛔️ Ce paiement a déjà été utilisé pour un autre ancrage.")
+                                     st.warning("Chaque transaction de paiement ne peut servir qu'une seule fois.")
+                                else:
+                                    st.session_state.payment_validated = True
+                                    st.session_state.tx_hash = tx_id # On stocke le hash
+                                    # On marque comme utilisé
+                                    used_tx_registry.add(tx_id)
+                                    st.success(f"✅ Paiement authentifié ! (TX: {tx_id[:10]}...)")
                             else:
                                  st.error("❌ Aucun paiement trouvé venant de cette adresse.")
                                  st.info("💡 Si vous avez payé il y a longtemps, utilisez le mode 'SOS' ci-dessous avec votre TX Hash.")
@@ -662,10 +679,15 @@ with tab1:
                             success, msg = verify_manual_tx(manual_tx, cost_in_pol, COMPANY_WALLET_ADDRESS, recipient_address)
                         
                         if success:
-                            st.session_state.payment_validated = True
-                            st.session_state.tx_hash = manual_tx # On stocke le hash
-                            st.success("✅ Transaction valide trouvée ! Reprise de l'ancrage...")
-                            st.rerun() # Refresh pour afficher la suite
+                            # ANTI-REPLAY CHECK
+                            if manual_tx in used_tx_registry:
+                                 st.error("⛔️ Ce paiement a déjà été utilisé pour un autre ancrage.")
+                            else:
+                                st.session_state.payment_validated = True
+                                st.session_state.tx_hash = manual_tx # On stocke le hash
+                                used_tx_registry.add(manual_tx)
+                                st.success("✅ Transaction valide trouvée ! Reprise de l'ancrage...")
+                                st.rerun() # Refresh pour afficher la suite
                         else:
                             st.error(f"❌ Erreur : {msg}")
             
