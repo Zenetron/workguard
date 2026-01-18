@@ -265,7 +265,7 @@ def anchor_hash_on_polygon(file_hash, author_name, recipient_address=None):
     except Exception as e:
         return {"success": False, "error": str(e)}
 
-def verify_manual_tx(tx_hash, expected_amount_pol, company_address):
+def verify_manual_tx(tx_hash, expected_amount_pol, company_address, expected_sender=None):
     """Vérifie manuellement une transaction donnée par son hash."""
     try:
         w3 = Web3(Web3.HTTPProvider(RPC_URL))
@@ -279,6 +279,11 @@ def verify_manual_tx(tx_hash, expected_amount_pol, company_address):
         value_pol = float(w3.from_wei(tx['value'], 'ether'))
         if value_pol < (expected_amount_pol * 0.98):
              return False, f"Montant insuffisant ({value_pol} POL). Requis : {expected_amount_pol} POL."
+
+        # 3. Vérifier l'expéditeur (si fourni)
+        if expected_sender and expected_sender.strip():
+             if tx['from'].lower() != expected_sender.lower().strip():
+                 return False, f"Mauvais expéditeur. Le paiement vient de {tx['from']} mais vous avez déclaré {expected_sender}."
              
         return True, "OK"
     except Exception as e:
@@ -541,7 +546,7 @@ with tab1:
                             if MOCK_MODE:
                                 success, msg = True, "Mock OK"
                             else:
-                                success, msg = verify_manual_tx(manual_tx, cost_in_pol, COMPANY_WALLET_ADDRESS)
+                                success, msg = verify_manual_tx(manual_tx, cost_in_pol, COMPANY_WALLET_ADDRESS, recipient_address)
                             
                             if success:
                                 payment_verified = True
