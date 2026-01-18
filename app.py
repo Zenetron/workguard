@@ -789,12 +789,54 @@ with tab1:
 # --- ONGLET 2 : VÉRIFICATION ---
 with tab2:
     st.markdown("#### Vérifier l'authenticité d'un fichier")
-    check_file = st.file_uploader("Upload le fichier à vérifier", key="verify")
-    if check_file:
-        check_hash = calculate_file_hash(check_file)
-        st.write(f"Hash calculé : `{check_hash}`")
-        st.info("Pour vérifier, collez ce hash dans la barre de recherche de PolygonScan (Input Data).")
-        st.markdown(f"[Ouvrir PolygonScan](https://polygonscan.com/)")
+    st.info("Pour vérifier une preuve, vous avez besoin du fichier original ET de l'ID de Transaction (fourni sur le certificat).")
+    
+    check_file = st.file_uploader("1. Upload le fichier à vérifier", key="verify")
+    check_tx = st.text_input("2. Collez l'ID de Transaction (TX Hash)")
+    
+    if st.button("🔍 Vérifier sur la Blockchain"):
+        if check_file and check_tx:
+            # 1. Calcul du Hash
+            check_hash = calculate_file_hash(check_file)
+            st.write(f"Hash du fichier : `{check_hash}`")
+            
+            # 2. Fetch Transaction
+            try:
+                w3 = Web3(Web3.HTTPProvider(RPC_URL))
+                tx = w3.eth.get_transaction(check_tx)
+                input_data = tx['input'] # Hex string or bytes
+                
+                # Conversion Hex -> String
+                try:
+                    if isinstance(input_data, bytes):
+                        decoded = input_data.decode('utf-8', errors='ignore')
+                    else:
+                        decoded = bytes.fromhex(input_data[2:]).decode('utf-8', errors='ignore')
+                except:
+                    decoded = str(input_data)
+                
+                st.write("Données brutes lues :", decoded)
+                
+                # 3. Parsing
+                # Format attendu: Blob:{hash}|Owner:{name}
+                if f"Blob:{check_hash}" in decoded:
+                    # Extraction du nom
+                    import re
+                    match = re.search(r"Owner:([^|]+)", decoded)
+                    owner_name = match.group(1) if match else "Inconnu"
+                    
+                    st.success(f"✅ **PREUVE AUTHENTIQUE CONFIRMÉE !**")
+                    st.markdown(f"### 👤 Propriétaire légitime : **{owner_name}**")
+                    st.caption(f"Ancré le : {datetime.fromtimestamp(w3.eth.get_block(tx['blockNumber'])['timestamp'])}")
+                else:
+                    st.error("❌ **NON CORRESPONDANT**")
+                    st.warning("Ce fichier ne correspond pas aux données gravées dans cette transaction.")
+                    st.write(f"Attendu : Blob:{check_hash}")
+                    
+            except Exception as e:
+                st.error(f"Erreur lors de la lecture de la transaction : {e}")
+        else:
+            st.warning("Veuillez remplir le fichier et le TX Hash.")
 
 st.markdown("---")
 st.caption("🔒 WorkGuard - Sécurisé par la Blockchain.")
