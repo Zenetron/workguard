@@ -357,6 +357,10 @@ with tab1:
                 do_check = st.button("✅ VÉRIFIER LE PAIEMENT & ANCRER")
 
             # Bouton de validation SÉCURISÉ
+            # On utilise un container vide pour le résultat ou on vérifie le state
+            if "proof_cache" not in st.session_state:
+                st.session_state.proof_cache = {}
+
             if do_check:
                 
                 if MOCK_MODE:
@@ -406,34 +410,51 @@ with tab1:
 
                     if result["success"]:
                         st.balloons()
-                        st.success("✅ **FÉLICITATIONS ! VOTRE ŒUVRE EST PROTÉGÉE.**")
-                        with st.expander("Voir le Certificat de Preuve", expanded=True):
-                            st.markdown("### 📜 Certificat WorkGuard")
-                            
-                            st.write("**Propriétaire**")
-                            st.info(author_name)
-                            
-                            st.write("**Fichier**")
-                            st.text(uploaded_file.name)
-                            
-                            st.write("**Empreinte (Hash)**")
-                            st.code(file_hash, language="text")
-                            
-                            st.write("**Donnée Gravée**")
-                            st.code(result.get('payload'), language="text")
-                            
-                            col_date, col_tx = st.columns([1, 2])
-                            with col_date:
-                                st.write("**Date**")
-                                st.text(result['timestamp'])
-                            with col_tx:
-                                st.write("**Transaction ID (TX)**")
-                                st.code(result['tx_hash'], language="text")
-                            link = f"https://polygonscan.com/tx/{result['tx_hash']}"
-                            st.markdown(f"[🔎 Voir sur PolygonScan]({link})")
-                            st.caption("Sur PolygonScan, cliquez sur 'Click to see More' -> 'Input Data' -> 'View as UTF-8' pour lire votre nom.")
+                        # SAUVEGARDE DU RÉSULTAT DANS LE STATE
+                        st.session_state.proof_cache[file_hash] = result
                     else:
                         st.error(f"Echec de l'ancrage : {result.get('error')}")
+
+            # AFFICHAGE DU RÉSULTAT (PERSISTANT)
+            if file_hash in st.session_state.proof_cache:
+                result = st.session_state.proof_cache[file_hash]
+                st.success("✅ **FÉLICITATIONS ! VOTRE ŒUVRE EST PROTÉGÉE.**")
+                
+                # Manual Expander Logic
+                if "show_cert" not in st.session_state:
+                    st.session_state.show_cert = True
+                
+                if st.button(f"{'🔽' if st.session_state.show_cert else '▶️'} Voir le Certificat de Preuve"):
+                    st.session_state.show_cert = not st.session_state.show_cert
+                    st.rerun()
+                
+                if st.session_state.show_cert:
+                    with st.container(border=True):
+                        st.markdown("### 📜 Certificat WorkGuard")
+                        
+                        st.write("**Propriétaire**")
+                        st.info(author_name)
+                        
+                        st.write("**Fichier**")
+                        st.text(uploaded_file.name)
+                        
+                        st.write("**Empreinte (Hash)**")
+                        st.code(file_hash, language="text")
+                        
+                        st.write("**Donnée Gravée**")
+                        st.code(result.get('payload'), language="text")
+                        
+                        col_date, col_tx = st.columns([1, 2])
+                        with col_date:
+                            st.write("**Date**")
+                            st.text(result['timestamp'])
+                        with col_tx:
+                            st.write("**Transaction ID (TX)**")
+                            st.code(result['tx_hash'], language="text")
+                        
+                        link = f"https://polygonscan.com/tx/{result['tx_hash']}"
+                        st.markdown(f"[🔎 Voir sur PolygonScan]({link})")
+                        st.caption("Sur PolygonScan, cliquez sur 'Click to see More' -> 'Input Data' -> 'View as UTF-8' pour lire votre nom.")
 
 # --- ONGLET 2 : VÉRIFICATION ---
 with tab2:
