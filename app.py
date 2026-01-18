@@ -32,11 +32,19 @@ COMPANY_WALLET_ADDRESS = Web3.to_checksum_address("0xd12ef43f0cd2e925d2d55ede9b8
 # C'est CE wallet qui paie les frais de gaz pour ancrer la preuve.
 # Il doit avoir un peu de MATIC.
 # RÉCUPÉRATION SÉCURISÉE DEPUIS .streamlit/secrets.toml
-try:
-    COMPANY_PRIVATE_KEY = st.secrets["private_key"]
-except (FileNotFoundError, KeyError):
-    # Fallback pour Render : On cherche dans les Variables d'Environnement
-    COMPANY_PRIVATE_KEY = os.environ.get("private_key", "0x...")
+# RÉCUPÉRATION SÉCURISÉE (Local vs Prod)
+# 1. D'abord on regarde si une Variable d'Environnement existe (Render/Prod)
+if "private_key" in os.environ:
+    COMPANY_PRIVATE_KEY = os.environ["private_key"]
+# 2. Sinon on tente le fichier local secrets.toml (Dev Local)
+elif os.path.exists(".streamlit/secrets.toml"):
+    try:
+        COMPANY_PRIVATE_KEY = st.secrets["private_key"]
+    except KeyError:
+        COMPANY_PRIVATE_KEY = "0x..."
+else:
+    # 3. Fallback total
+    COMPANY_PRIVATE_KEY = "0x..."
 
 
 # MOCK_MODE = False pour activer la vraie blockchain
