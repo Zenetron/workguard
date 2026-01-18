@@ -268,13 +268,13 @@ def anchor_hash_on_polygon(file_hash, author_name, recipient_address=None):
     except Exception as e:
         return {"success": False, "error": str(e)}
 
-def scan_recent_blocks(expected_sender, expected_amount_pol, company_address, lookback_blocks=20):
+def scan_recent_blocks(expected_sender, expected_amount_pol, company_address, lookback_blocks=120):
     """Scanne les derniers blocs pour trouver une transaction spécifique (Sécurité stricte)."""
     try:
         w3 = Web3(Web3.HTTPProvider(RPC_URL))
         latest_block = w3.eth.block_number
         
-        # On regarde les N derniers blocs
+        # On regarde les N derniers blocs (120 blocs ~ 4-5 minutes)
         for block_num in range(latest_block, latest_block - lookback_blocks, -1):
             block = w3.eth.get_block(block_num, full_transactions=True)
             for tx in block.transactions:
@@ -527,71 +527,89 @@ with tab1:
 
             # Bouton de validation SÉCURISÉ
             # On utilise un container vide pour le résultat ou on vérifie le state
+            # Bouton de validation SÉCURISÉ
+            # On utilise un container vide pour le résultat ou on vérifie le state
             if "proof_cache" not in st.session_state:
                 st.session_state.proof_cache = {}
-
+            
+            # Initialisation du flag de validation dans la session
+            if "payment_validated" not in st.session_state:
+                st.session_state.payment_validated = False
+                
+            # --- LOGIQUE DE VÉRIFICATION ---
+            
+            # Cas 1 : Bouton Principal
             if do_check:
-                payment_verified = False
-                found_tx_hash = None
-                
-                # MODE STRICT : Si l'utilisateur nous a donné son adresse, on vérifie VRAIMENT
-                if recipient_address and len(recipient_address) > 10 and not MOCK_MODE:
-                    with st.spinner(f"🔍 Scan des 20 derniers blocs pour trouver un paiement de {recipient_address}..."):
-                        found, tx_id = scan_recent_blocks(recipient_address, cost_in_pol, COMPANY_WALLET_ADDRESS)
-                        if found:
-                            payment_verified = True
-                            found_tx_hash = tx_id
-                            st.success(f"✅ Paiement authentifié ! (TX: {tx_id[:10]}...)")
-                        else:
-                             st.error("❌ Aucun paiement trouvé venant de cette adresse dans les 2 dernières minutes.")
-                             st.info("💡 Si vous avez payé il y a longtemps, utilisez le mode 'SOS' ci-dessous avec votre TX Hash.")
-                
-                # MODE CLASSIQUE (Fallback) : Vérification du solde global
-                elif not payment_verified:
-                    if MOCK_MODE:
-                        payment_verified = True
-                        found_tx_hash = "0xMockPaymentHash"
-                        st.info("Validation MOCK")
+                if MOCK_MODE:
+                    st.session_state.payment_validated = True
+                else:
+                    # Reset pour nouvelle tentative
+                    st.session_state.payment_validated = False
+                    
+                    found_tx_hash = None
+                    
+                    # MODE STRICT : Si l'utilisateur nous a donné son adresse
+                    if recipient_address and len(recipient_address) > 10:
+                        with st.spinner(f"🔍 Scan des 120 derniers blocs (~5 min) de {recipient_address}..."):
+                            found, tx_id = scan_recent_blocks(recipient_address, cost_in_pol, COMPANY_WALLET_ADDRESS)
+                            if found:
+                                st.session_state.payment_validated = True
+                                st.session_state.tx_hash = tx_id # On stocke le hash
+                                st.success(f"✅ Paiement authentifié ! (TX: {tx_id[:10]}...)")
+                            else:
+                                 st.error("❌ Aucun paiement trouvé venant de cette adresse dans les 5 dernières minutes.")
+                                 st.info("💡 Si vous avez payé il y a longtemps, utilisez le mode 'SOS' ci-dessous avec votre TX Hash.")
+                                 
+                    # MODE CLASSIQUE (Fallback) : Vérification du solde global
                     else:
                         with st.spinner(" Vérification standard (Solde)..."):
                             time.sleep(1)
                             try:
                                 w3 = Web3(Web3.HTTPProvider(RPC_URL))
                                 current_balance_wei = w3.eth.get_balance(COMPANY_WALLET_ADDRESS)
-                                
-                                diff_wei = current_balance_wei - st.session_state['initial_balance_wei']
+                                diff_wei = current_balance_wei - st.session_state.get('initial_balance_wei', 0)
                                 if diff_wei < 0: diff_wei = 0
-                                
                                 diff_pol = float(w3.from_wei(diff_wei, 'ether'))
                                 
                                 if diff_pol >= (cost_in_pol * 0.98):
-                                     payment_verified = True
+                                     st.session_state.payment_validated = True
                                 else:
-                                    payment_verified = False
                                     st.error(f"❌ Paiement non détecté ou insuffisant.")
                                     st.warning(f"Attendu: +{cost_in_pol:.4f} POL | Reçu: {diff_pol:.4f} POL")
                             except Exception as e:
                                 st.error(f"Erreur vérif solde: {e}")
-                
-                # SOS FALBACK - VÉRIFICATION MANUELLE
-                if not payment_verified:
-                    with st.expander("🆘 Mon paiement n'est pas détecté ?"):
-                        st.info("Si vous avez payé mais que le système ne le voit pas (ex: vous avez rafraîchi la page), copiez l'ID de Transaction (TX Hash) depuis votre Wallet et collez-le ici.")
-                        manual_tx = st.text_input("Collez votre TX Hash (ex: 0x123abc...)")
-                        if st.button("Vérifier manuellement cette transaction"):
-                            if MOCK_MODE:
-                                success, msg = True, "Mock OK"
-                            else:
-                                success, msg = verify_manual_tx(manual_tx, cost_in_pol, COMPANY_WALLET_ADDRESS, recipient_address)
-                            
-                            if success:
-                                payment_verified = True
-                                st.success("✅ Transaction valide trouvée ! Reprise de l'ancrage...")
-                            else:
-                                st.error(f"❌ Erreur : {msg}")
 
-                if payment_verified:
-                    st.success("Paiement reçu ! Ancrage en cours...")
+            # SOS FALBACK - VÉRIFICATION MANUELLE
+            # On affiche le SOS seulement si pas encore validé
+            if not st.session_state.payment_validated:
+                 with st.expander("🆘 Mon paiement n'est pas détecté ?"):
+                    st.info("Copiez l'ID de Transaction (TX Hash) depuis votre Wallet.")
+                    manual_tx = st.text_input("Collez votre TX Hash (ex: 0x123abc...)")
+                    if st.button("Vérifier manuellement cette transaction"):
+                        if MOCK_MODE:
+                            success, msg = True, "Mock OK"
+                        else:
+                            # On vérifie montant + expéditeur (si fourni)
+                            success, msg = verify_manual_tx(manual_tx, cost_in_pol, COMPANY_WALLET_ADDRESS, recipient_address)
+                        
+                        if success:
+                            st.session_state.payment_validated = True
+                            st.session_state.tx_hash = manual_tx # On stocke le hash
+                            st.success("✅ Transaction valide trouvée ! Reprise de l'ancrage...")
+                            st.rerun() # Refresh pour afficher la suite
+                        else:
+                            st.error(f"❌ Erreur : {msg}")
+            
+            # --- ANCRAGE (SI VALIDÉ) ---
+            if st.session_state.payment_validated:
+                
+                # Si on a pas de TX hash (mode classique), on met un placeholder
+                if "tx_hash" not in st.session_state:
+                     st.session_state.tx_hash = "Non spécifié (Mode Solde)"
+                     
+                st.success("Paiement confirmée. Ancrage en cours...")
+                # La suite du code d'ancrage reste ici...
+                payment_verified = True # Pour compatibilité avec le reste du code existant en bas
                     
                     my_bar = st.progress(0, text="Connexion à Polygon...")
                     steps = [(30, "Signature de la transaction..."), (60, "Diffusion sur le réseau..."), (90, "Confirmation...")]
