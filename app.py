@@ -214,6 +214,56 @@ def generate_qr_code(data):
     buf.seek(0)
     return buf
 
+def find_proof_in_history(target_hash):
+    """
+    Scanne l'historique du Wallet Company sur PolygonScan pour retrouver une preuve.
+    Retourne {success, tx_hash, timestamp, owner_name} ou None.
+    """
+    try:
+        # API PolygonScan (Gratuite, sans clé = limité à 5req/sec)
+        # On récupère les 1000 dernières transactions (desc)
+        url = f"https://api.polygonscan.com/api?module=account&action=txlist&address={COMPANY_WALLET_ADDRESS}&startblock=0&endblock=99999999&page=1&offset=1000&sort=desc"
+        
+        response = requests.get(url, timeout=10)
+        data = response.json()
+        
+        if data['status'] != '1':
+            return None # Pas de data ou erreur
+            
+        for tx in data['result']:
+            input_data = tx.get('input', '')
+            
+            # Si input vide ou trop court, on skip
+            if not input_data or len(input_data) < 10:
+                continue
+                
+            # Décodage Hex -> Texte
+            try:
+                decoded = bytes.fromhex(input_data[2:]).decode('utf-8', errors='ignore')
+            except:
+                continue
+                
+            # Recherche du pattern Blob:{hash}
+            if f"Blob:{target_hash}" in decoded:
+                # BINGO !
+                import re
+                match = re.search(r"Owner:([^|]+)", decoded)
+                owner_name = match.group(1) if match else "Inconnu"
+                
+                return {
+                    "success": True,
+                    "tx_hash": tx['hash'],
+                    "timestamp": datetime.fromtimestamp(int(tx['timeStamp'])),
+                    "owner_name": owner_name,
+                    "payload": decoded
+                }
+                
+        return None # Pas trouvé dans les 1000 dernières
+        
+    except Exception as e:
+        print(f"Erreur Scan History: {e}")
+        return None
+
 def anchor_hash_on_polygon(file_hash, author_name, recipient_address=None):
     """
     Envoie une transaction REAL sur Polygon pour ancrer le hash + le nom de l'auteur.
@@ -789,54 +839,40 @@ with tab1:
 # --- ONGLET 2 : VÉRIFICATION ---
 with tab2:
     st.markdown("#### Vérifier l'authenticité d'un fichier")
-    st.info("Pour vérifier une preuve, vous avez besoin du fichier original ET de l'ID de Transaction (fourni sur le certificat).")
+    st.info("ℹ️ Ce moteur recherche la preuve directement dans l'historique de notre Blockchain.")
     
-    check_file = st.file_uploader("1. Upload le fichier à vérifier", key="verify")
-    check_tx = st.text_input("2. Collez l'ID de Transaction (TX Hash)")
+    check_file = st.file_uploader("Upload le fichier à vérifier", key="verify")
     
-    if st.button("🔍 Vérifier sur la Blockchain"):
-        if check_file and check_tx:
-            # 1. Calcul du Hash
-            check_hash = calculate_file_hash(check_file)
-            st.write(f"Hash du fichier : `{check_hash}`")
-            
-            # 2. Fetch Transaction
-            try:
-                w3 = Web3(Web3.HTTPProvider(RPC_URL))
-                tx = w3.eth.get_transaction(check_tx)
-                input_data = tx['input'] # Hex string or bytes
+    if check_file:
+        check_hash = calculate_file_hash(check_file)
+        st.write(f"**Empreinte (Hash)** : `{check_hash}`")
+        
+        if st.button("🔍 Rechercher le Propriétaire (Reverse Search)"):
+            with st.spinner("🕵️‍♂️ Scan de la Blockchain en cours..."):
+                proof = find_proof_in_history(check_hash)
                 
-                # Conversion Hex -> String
-                try:
-                    if isinstance(input_data, bytes):
-                        decoded = input_data.decode('utf-8', errors='ignore')
-                    else:
-                        decoded = bytes.fromhex(input_data[2:]).decode('utf-8', errors='ignore')
-                except:
-                    decoded = str(input_data)
+            if proof:
+                st.balloons()
+                st.success(f"✅ **PREUVE AUTHENTIQUE TROUVÉE !**")
                 
-                st.write("Données brutes lues :", decoded)
-                
-                # 3. Parsing
-                # Format attendu: Blob:{hash}|Owner:{name}
-                if f"Blob:{check_hash}" in decoded:
-                    # Extraction du nom
-                    import re
-                    match = re.search(r"Owner:([^|]+)", decoded)
-                    owner_name = match.group(1) if match else "Inconnu"
+                # Joli affichage
+                with st.container(border=True):
+                    st.markdown(f"### 👤 Propriétaire : **{proof['owner_name']}**")
+                    st.markdown(f"📅 **Date d'ancrage** : {proof['timestamp']}")
                     
-                    st.success(f"✅ **PREUVE AUTHENTIQUE CONFIRMÉE !**")
-                    st.markdown(f"### 👤 Propriétaire légitime : **{owner_name}**")
-                    st.caption(f"Ancré le : {datetime.fromtimestamp(w3.eth.get_block(tx['blockNumber'])['timestamp'])}")
-                else:
-                    st.error("❌ **NON CORRESPONDANT**")
-                    st.warning("Ce fichier ne correspond pas aux données gravées dans cette transaction.")
-                    st.write(f"Attendu : Blob:{check_hash}")
+                    st.divider()
+                    st.write("**Data Brute Blockchain**")
+                    st.code(proof['payload'])
                     
-            except Exception as e:
-                st.error(f"Erreur lors de la lecture de la transaction : {e}")
-        else:
-            st.warning("Veuillez remplir le fichier et le TX Hash.")
+                    st.write("**ID Transaction**")
+                    st.code(proof['tx_hash'])
+                    
+                    link = f"https://polygonscan.com/tx/{proof['tx_hash']}"
+                    st.markdown(f"[🔎 Voir la preuve officielle sur PolygonScan]({link})")
+            else:
+                 st.error("❌ **Preuve introuvable.**")
+                 st.warning("Ce fichier n'a pas été trouvé dans l'historique récent de WorkGuard.")
+                 st.caption("Note : La recherche se limite aux 1000 dernières transactions.")
 
 st.markdown("---")
 st.caption("🔒 WorkGuard - Sécurisé par la Blockchain.")
