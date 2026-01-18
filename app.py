@@ -238,6 +238,24 @@ st.markdown("### La Preuve d'Antériorité Décentralisée.")
 st.markdown("Protégez vos créations (Design, Audio, Contrats) en les ancrant immuablement sur la Blockchain Polygon.")
 st.markdown("---")
 
+with st.expander("ℹ️ Guide & Mode d'Emploi - À LIRE AVANT D'UTILISER"):
+    st.markdown("""
+    ### 🛡️ Comment ça marche ?
+    WorkGuard crée une **Preuve d'Antériorité** irréfutable pour vos fichiers.
+    
+    1.  **Empreinte Numérique** : Nous calculons le "Hash" (SHA-256) de votre fichier. C'est comme son empreinte digitale unique.
+    2.  **Ancrage Blockchain** : Ce Hash est envoyé sur la Blockchain Polygon. Comme la Blockchain est ineffaçable, cela prouve que ce fichier existait à cette date précise.
+    3.  **Confidentialité** : Votre fichier **reste sur votre ordinateur**. Seul le Hash (une suite de chiffres et de lettres) est envoyé.
+    
+    ### ⚠️ RÈGLE D'OR : NE MODIFIEZ PAS VOTRE FICHIER
+    Pour prouver que vous êtes l'auteur, vous devrez présenter **exactement le même fichier** dans le futur.
+    
+    *   Si vous changez un seul pixel, une virgule, ou un métadonnée, **le Hash changera**.
+    *   La preuve ne fonctionnera plus pour ce nouveau fichier.
+    
+    👉 **Conseil :** Archivez une copie originale de votre œuvre dans un dossier sûr (ex: "Mes Créations Protégées") et n'y touchez plus.
+    """)
+
 # CHECK CONFIGURATION
 if not MOCK_MODE and (COMPANY_PRIVATE_KEY == "0x..." or "YourCompany" in COMPANY_WALLET_ADDRESS):
     st.error("🚨 **CONFIGURATION REQUISE**")
