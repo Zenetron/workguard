@@ -5,3 +5,4 @@ watchdog>=2.1.0
 qrcode
 Pillow
 requests
+fpdf

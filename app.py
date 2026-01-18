@@ -7,7 +7,9 @@ import qrcode
 from io import BytesIO
 from datetime import datetime
 from web3 import Web3
+from web3 import Web3
 from eth_account import Account
+from fpdf import FPDF
 
 # -----------------------------------------------------------------------------
 # CONFIGURATION
@@ -247,7 +249,65 @@ def anchor_hash_on_polygon(file_hash, author_name, recipient_address=None):
             "payload": payload
         }
     except Exception as e:
+    except Exception as e:
         return {"success": False, "error": str(e)}
+
+def create_pdf_certificate(author_name, file_name, file_hash, tx_hash, timestamp, payload):
+    """Génère un PDF officiel pour le certificat."""
+    pdf = FPDF()
+    pdf.add_page()
+    
+    # Cadre
+    pdf.set_line_width(1)
+    pdf.rect(5, 5, 200, 287)
+    pdf.set_line_width(0.5)
+    pdf.rect(8, 8, 194, 281)
+    
+    # Header
+    pdf.set_font("Arial", 'B', 24)
+    pdf.set_text_color(23, 37, 84) # Dark Blue
+    pdf.cell(0, 20, "", ln=True)
+    pdf.cell(0, 10, "CERTIFICAT D'ANTÉRIORITÉ", 0, 1, 'C')
+    pdf.set_font("Arial", '', 14)
+    pdf.set_text_color(100, 116, 139) # Gray
+    pdf.cell(0, 10, "WorkGuard - Blockchain Polygon", 0, 1, 'C')
+    pdf.ln(20)
+    
+    # Details Body
+    pdf.set_text_color(0, 0, 0)
+    
+    def add_field(label, value):
+        pdf.set_font("Arial", 'B', 12)
+        pdf.cell(50, 10, label, 0, 0)
+        pdf.set_font("Courier", '', 11) # Monospace pour les codes
+        pdf.multi_cell(0, 10, value)
+        pdf.ln(5)
+
+    add_field("Propriétaire :", author_name)
+    add_field("Fichier :", file_name)
+    add_field("Date d'ancrage :", str(timestamp))
+    pdf.ln(5)
+    
+    pdf.set_fill_color(241, 245, 249)
+    pdf.rect(10, pdf.get_y(), 190, 25, 'F')
+    pdf.set_y(pdf.get_y() + 5)
+    pdf.set_x(15)
+    add_field("Empreinte (Hash) :", file_hash)
+    
+    pdf.ln(5)
+    pdf.set_x(15)
+    add_field("Transaction (TX) :", tx_hash)
+    
+    pdf.ln(20)
+    pdf.set_font("Arial", 'I', 10)
+    pdf.set_text_color(100, 100, 100)
+    pdf.multi_cell(0, 5, "Ce document certifie que l'empreinte numérique du fichier susmentionné a été ancrée de manière immuable sur la Blockchain Polygon à la date indiquée. La présence de cette transaction prouve l'existence du fichier à cet instant précis.", 0, 'C')
+    
+    pdf.ln(20)
+    pdf.set_font("Arial", 'B', 10)
+    pdf.cell(0, 10, "Vérifiable sur : https://polygonscan.com/", 0, 1, 'C')
+    
+    return pdf.output(dest='S').encode('latin-1')
 
 # -----------------------------------------------------------------------------
 # APPLICATION
@@ -474,6 +534,25 @@ with tab1:
                         link = f"https://polygonscan.com/tx/{result['tx_hash']}"
                         st.markdown(f"[🔎 Voir sur PolygonScan]({link})")
                         st.caption("Sur PolygonScan, cliquez sur 'Click to see More' -> 'Input Data' -> 'View as UTF-8' pour lire votre nom.")
+                        
+                        st.divider()
+                        
+                        # PDF DOWNLOAD BUTTON
+                        pdf_bytes = create_pdf_certificate(
+                            author_name, 
+                            uploaded_file.name, 
+                            file_hash, 
+                            result['tx_hash'], 
+                            result['timestamp'], 
+                            result.get('payload')
+                        )
+                        st.download_button(
+                            label="📄 Télécharger mon Certificat Officiel (PDF)",
+                            data=pdf_bytes,
+                            file_name=f"WorkGuard_Certificat_{file_hash[:8]}.pdf",
+                            mime="application/pdf",
+                            use_container_width=True
+                        )
 
 # --- ONGLET 2 : VÉRIFICATION ---
 with tab2:
