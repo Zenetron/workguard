@@ -293,8 +293,6 @@ with tab1:
                     st.markdown("<p style='text-align: center; font-size: 0.8em; margin-bottom: 5px;'>Ou envoyez manuellement à cette adresse :</p>", unsafe_allow_html=True)
                     st.code(COMPANY_WALLET_ADDRESS, language="text")
 
-            st.warning("⚠️ Une fois le paiement envoyé, cliquez sur le bouton ci-dessous.")
-
             # --- LOGIQUE DE VÉRIFICATION DU SOLDE (VIGILE) ---
             
             # 1. On mémorise le solde AVANT le paiement (si pas déjà fait pour ce fichier)
@@ -307,8 +305,14 @@ with tab1:
                     st.error(f"Erreur lecture solde: {str(e)}")
                     st.stop()
 
+            # CENTER BUTTON & WARNING
+            _, col_cta, _ = st.columns([1, 2, 1])
+            with col_cta:
+                st.warning("⚠️ Une fois le paiement envoyé, cliquez sur le bouton ci-dessous.")
+                do_check = st.button("✅ VÉRIFIER LE PAIEMENT & ANCRER")
+
             # Bouton de validation SÉCURISÉ
-            if st.button("✅ VÉRIFIER LE PAIEMENT & ANCRER"):
+            if do_check:
                 
                 if MOCK_MODE:
                     payment_verified = True # En Mock, on laisse passer
