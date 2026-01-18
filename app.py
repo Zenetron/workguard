@@ -105,6 +105,8 @@ st.markdown("""
         color: #F8FAFC !important; 
         border-radius: 8px !important;
     }
+    .streamlit-expanderHeader svg { display: none !important; } /* Hide bugged arrow */
+    
     div[data-testid="stExpander"] { 
         border: 1px solid #1E293B; 
         border-radius: 8px; 
@@ -245,7 +247,8 @@ with st.expander("ℹ️ Guide & Mode d'Emploi - À LIRE AVANT D'UTILISER"):
     
     1.  **Empreinte Numérique** : Nous calculons le "Hash" (SHA-256) de votre fichier. C'est comme son empreinte digitale unique.
     2.  **Ancrage Blockchain** : Ce Hash est envoyé sur la Blockchain Polygon. Comme la Blockchain est ineffaçable, cela prouve que ce fichier existait à cette date précise.
-    3.  **Confidentialité** : Votre fichier **reste sur votre ordinateur**. Seul le Hash (une suite de chiffres et de lettres) est envoyé.
+    3.  **Paternité (Votre Nom)** : Nous inscrivons aussi votre **Nom** (ou Pseudo) à côté de l'empreinte pour prouver que c'est VOUS l'auteur.
+    4.  **Confidentialité** : Votre fichier **reste sur votre ordinateur**. Seul le Hash crypté est publié.
     
     ### ⚠️ RÈGLE D'OR : NE MODIFIEZ PAS VOTRE FICHIER
     Pour prouver que vous êtes l'auteur, vous devrez présenter **exactement le même fichier** dans le futur.
