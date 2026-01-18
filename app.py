@@ -325,10 +325,10 @@ def create_pdf_certificate(author_name, file_name, file_hash, tx_hash, timestamp
             img.save(tmp_file.name)
             tmp_path = tmp_file.name
             
-        # Placement en HAUT À DROITE (à côté du titre)
-        # Page A4 width = 210mm. Marge droite ~10mm.
-        # X = 165, Y = 12
-        pdf.image(tmp_path, x=165, y=12, w=25)
+        # Placement au CENTRE, EN HAUT (au-dessus du titre)
+        # Page A4 width = 210mm. Img width = 30mm. X = (210-30)/2 = 90.
+        # Y = 12 (dans la marge haute)
+        pdf.image(tmp_path, x=90, y=12, w=30)
         
         # Nettoyage
         os.unlink(tmp_path)
