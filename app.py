@@ -408,17 +408,8 @@ st.markdown("### La Preuve d'Antériorité Décentralisée.")
 st.markdown("Protégez vos créations (Vidéos, Photos, Audios, Contrats) en les ancrant immuablement sur la Blockchain Polygon.")
 st.markdown("---")
 
-# IMPLÉMENTATION "MANUELLE" DE L'ACCORDÉON POUR ÉVITER LE BUG VISUEL
-if "show_help" not in st.session_state:
-    st.session_state.show_help = False
-
-_, col_help, _ = st.columns([1, 10, 1]) # Centrage large
-with col_help:
-    if st.button(f"{'🔽' if st.session_state.show_help else '▶️'} Guide & Mode d'Emploi - À LIRE AVANT D'UTILISER", use_container_width=True):
-        st.session_state.show_help = not st.session_state.show_help
-        st.rerun()
-
-if st.session_state.show_help:
+# IMPLÉMENTATION STANDARD (Car fixée par CSS)
+with st.expander("ℹ️ Guide & Mode d'Emploi - À LIRE AVANT D'UTILISER"):
     st.info("""
     ### 🛡️ Comment ça marche ?
     WorkGuard crée une **Preuve d'Antériorité** irréfutable pour vos fichiers.
@@ -600,16 +591,14 @@ with tab1:
                         else:
                             st.error(f"❌ Erreur : {msg}")
             
-            # --- ANCRAGE (SI VALIDÉ) ---
-            if st.session_state.payment_validated:
+            # --- ANCRAGE (SI VALIDÉ ET PAS ENCORE DANS LE CACHE) ---
+            if st.session_state.payment_validated and file_hash not in st.session_state.proof_cache:
                 
                 # Si on a pas de TX hash (mode classique), on met un placeholder
                 if "tx_hash" not in st.session_state:
                      st.session_state.tx_hash = "Non spécifié (Mode Solde)"
                      
-                st.success("Paiement confirmée. Ancrage en cours...")
-                # La suite du code d'ancrage reste ici...
-                payment_verified = True # Pour compatibilité avec le reste du code existant en bas
+                st.info("Paiement validé. Démarrage de l'ancrage...")
                     
                 my_bar = st.progress(0, text="Connexion à Polygon...")
                 steps = [(30, "Signature de la transaction..."), (60, "Diffusion sur le réseau..."), (90, "Confirmation...")]
@@ -630,6 +619,7 @@ with tab1:
                     st.balloons()
                     # SAUVEGARDE DU RÉSULTAT DANS LE STATE
                     st.session_state.proof_cache[file_hash] = result
+                    st.rerun() # Refresh pour afficher le certificat immédiatement
                 else:
                     st.error(f"Echec de l'ancrage : {result.get('error')}")
 
