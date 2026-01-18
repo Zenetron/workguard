@@ -311,6 +311,18 @@ def verify_manual_tx(tx_hash, expected_amount_pol, company_address, expected_sen
              if tx['from'].lower() != expected_sender.lower().strip():
                  return False, f"Mauvais expéditeur. Le paiement vient de {tx['from']} mais vous avez déclaré {expected_sender}."
              
+             
+        # 4. Vérification Temporelle (Anti-Replay)
+        # On rejette les transactions vieilles de plus de 3 minutes (180s)
+        try:
+            block = w3.eth.get_block(tx['blockNumber'])
+            tx_timestamp = block['timestamp']
+            current_timestamp = time.time()
+            if (current_timestamp - tx_timestamp) > 180: # 3 minutes
+                 return False, f"Transaction expirée. Elle date de plus de 3 minutes. Veuillez refaire un paiement récent."
+        except:
+             pass # Si on arrive pas à lire le temps, on laisse passer (fail-open) ou fail-close selon besoin. Ici fail-open pour UX.
+
         return True, "OK"
     except Exception as e:
         return False, f"Transaction invalide ou introuvable : {str(e)}"
@@ -464,7 +476,9 @@ with tab1:
         st.caption("⚠️ **Attention** : Vous devez payer uniquement via le réseau **Polygon (MATIC / POL)**. Les paiements via Ethereum (Base, Arbitrum, Mainnet) seront perdus.")
         recipient_address = st.text_input("Votre Adresse Polygon (Réseau Polygon uniquement)", placeholder="0x...")
         
-        if author_name and (recipient_address and len(recipient_address) >= 10):
+        # UX : On est moins strict sur l'adresse ici pour permettre aux gens avec Voucher de mettre "0"
+        # La vérification stricte se fera au moment du paiement (si payant)
+        if author_name and recipient_address:
             st.divider()
             st.markdown("#### 3. Paiement du Service")
             
@@ -497,7 +511,7 @@ with tab1:
             if voucher_code and voucher_code.strip().upper() in VALID_VOUCHERS:
                 cost_in_pol = 0
                 is_free = True
-                st.success(f"✅ Code '{voucher_code.upper()}' appliqué ! Service GRATUIT (vous ne payez que le gaz).")
+                st.success(f"✅ Code '{voucher_code.upper()}' appliqué ! Service GRATUIT !")
             # ----------------------
             
             # CENTERED LAYOUT
