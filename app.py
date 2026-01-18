@@ -19,7 +19,7 @@ from fpdf import FPDF
 
 st.set_page_config(
     page_title="WorkGuard - Preuve d'Antériorité",
-    page_icon="WorkGuard Logo.png",
+    page_icon="favicon.png",
     layout="centered",
     initial_sidebar_state="collapsed"
 )
