@@ -268,13 +268,13 @@ def anchor_hash_on_polygon(file_hash, author_name, recipient_address=None):
     except Exception as e:
         return {"success": False, "error": str(e)}
 
-def scan_recent_blocks(expected_sender, expected_amount_pol, company_address, lookback_blocks=120):
+def scan_recent_blocks(expected_sender, expected_amount_pol, company_address, lookback_blocks=60):
     """Scanne les derniers blocs pour trouver une transaction spécifique (Sécurité stricte)."""
     try:
         w3 = Web3(Web3.HTTPProvider(RPC_URL))
         latest_block = w3.eth.block_number
         
-        # On regarde les N derniers blocs (120 blocs ~ 4-5 minutes)
+        # On regarde les N derniers blocs (60 blocs ~ 2-3 minutes) - Optimisé pour éviter timeouts
         for block_num in range(latest_block, latest_block - lookback_blocks, -1):
             block = w3.eth.get_block(block_num, full_transactions=True)
             for tx in block.transactions:
@@ -462,7 +462,7 @@ with tab1:
         # AJOUT : Adresse Wallet Client (OBLIGATOIRE POUR SÉCURITÉ)
         recipient_address = st.text_input("Votre Adresse Polygon (OBLIGATOIRE pour vérification)", placeholder="0x...")
         
-        if author_name:
+        if author_name and (recipient_address and len(recipient_address) >= 10):
             st.divider()
             st.markdown("#### 3. Paiement du Service")
             
