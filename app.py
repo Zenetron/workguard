@@ -337,6 +337,32 @@ def create_pdf_certificate(author_name, file_name, file_hash, tx_hash, timestamp
     pdf.rect(5, 5, 200, 287)
     pdf.set_line_width(0.5)
     pdf.rect(8, 8, 194, 281)
+
+    # AJOUT QR CODE (En PREMIER pour être sur la bonne page)
+    try:
+        # Lien direct vers la transaction
+        tx_link = f"https://polygonscan.com/tx/{tx_hash}"
+        
+        # Génération QR
+        qr = qrcode.QRCode(box_size=10, border=1)
+        qr.add_data(tx_link)
+        qr.make(fit=True)
+        img = qr.make_image(fill_color="black", back_color="white")
+        
+        # Sauvegarde temporaire
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as tmp_file:
+            img.save(tmp_file.name)
+            tmp_path = tmp_file.name
+            
+        # Placement au CENTRE, EN HAUT (au-dessus du titre)
+        # Page A4 width = 210mm. Img width = 25mm. X = (210-25)/2 = 92.5.
+        # Y=10 pour laisser une marge absolue
+        pdf.image(tmp_path, x=92.5, y=10, w=25)
+        
+        # Nettoyage
+        os.unlink(tmp_path)
+    except Exception as e:
+        print(f"Erreur QR PDF: {e}")
     
     # Header
     pdf.set_font("Arial", 'B', 24)
@@ -385,32 +411,7 @@ def create_pdf_certificate(author_name, file_name, file_hash, tx_hash, timestamp
     pdf.set_font("Arial", 'B', 10)
     pdf.cell(0, 10, "Vérifiable sur : https://polygonscan.com/", 0, 1, 'C')
 
-    # AJOUT QR CODE
-    try:
-        # Lien direct vers la transaction
-        tx_link = f"https://polygonscan.com/tx/{tx_hash}"
-        
-        # Génération QR
-        qr = qrcode.QRCode(box_size=10, border=1)
-        qr.add_data(tx_link)
-        qr.make(fit=True)
-        img = qr.make_image(fill_color="black", back_color="white")
-        
-        # Sauvegarde temporaire
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as tmp_file:
-            img.save(tmp_file.name)
-            tmp_path = tmp_file.name
-            
-        # Placement au CENTRE, EN HAUT (au-dessus du titre)
-        # Page A4 width = 210mm. Img width = 25mm. X = (210-25)/2 = 92.5.
-        # Y=10 pour laisser une marge
-        pdf.image(tmp_path, x=92.5, y=10, w=25)
-        
-        # Nettoyage
-        os.unlink(tmp_path)
-        
-    except Exception as e:
-        print(f"Erreur QR PDF: {e}")
+
     
     return pdf.output(dest='S').encode('latin-1')
 
