@@ -688,8 +688,9 @@ with tab1:
             # Cas 1 : Bouton Principal
             if do_check:
                 # SÉCURITÉ : On exige une adresse valide pour vérifier l'origine
+                # SÉCURITÉ : On exige une adresse valide pour vérifier l'origine
                 if not recipient_address or len(recipient_address) < 10:
-                     st.error("❌ Adresse invalide. Veuillez renseigner VOTRE adresse Polygon ci-dessus (section 2) pour l'identification.")
+                     st.error(T['err_invalid_address'])
                      st.stop()
                      
                 if MOCK_MODE:
@@ -707,17 +708,17 @@ with tab1:
                             if found:
                                 # ANTI-REPLAY CHECK
                                 if tx_id in used_tx_registry:
-                                     st.error("⛔️ Ce paiement a déjà été utilisé pour un autre ancrage.")
+                                     st.error(T['err_replay'])
                                      st.warning("Chaque transaction de paiement ne peut servir qu'une seule fois.")
                                 else:
                                     st.session_state.payment_validated = True
                                     st.session_state.tx_hash = tx_id # On stocke le hash
                                     # On marque comme utilisé
                                     used_tx_registry.add(tx_id)
-                                    st.success(f"✅ Paiement authentifié ! (TX: {tx_id[:10]}...)")
+                                    st.success(T['success_paid'].format(tx=tx_id[:10]))
                             else:
-                                 st.error("❌ Aucun paiement trouvé venant de cette adresse.")
-                                 st.info("💡 Si vous avez payé il y a longtemps, utilisez le mode 'SOS' ci-dessous avec votre TX Hash.")
+                                 st.error(T['err_not_found'])
+                                 st.info(T['sos_info'])
                                  
                     # MODE CLASSIQUE (Fallback) : Vérification du solde global
                     else:
@@ -733,7 +734,7 @@ with tab1:
                                 if diff_pol >= (cost_in_pol * 0.98):
                                      st.session_state.payment_validated = True
                                 else:
-                                    st.error(f"❌ Paiement non détecté ou insuffisant.")
+                                    st.error(T['err_insufficient'])
                                     st.warning(f"Attendu: +{cost_in_pol:.4f} POL | Reçu: {diff_pol:.4f} POL")
                             except Exception as e:
                                 st.error(f"Erreur vérif solde: {e}")
@@ -741,16 +742,16 @@ with tab1:
             # SOS FALBACK - VÉRIFICATION MANUELLE
             # On affiche le SOS seulement si pas encore validé ET si ce n'est pas un mode gratuit
             if not st.session_state.payment_validated and not is_free:
-                 with st.expander("🆘 Mon paiement n'est pas détecté ?", expanded=False):
+                 with st.expander(T['sos_title'], expanded=False):
                     with st.form("sos_form"):
-                        st.info("Copiez l'ID de Transaction (TX Hash) depuis votre Wallet.")
-                        manual_tx = st.text_input("Collez votre TX Hash (ex: 0x123abc...)")
-                        submit_sos = st.form_submit_button("Vérifier manuellement cette transaction")
+                        st.info(T['sos_info'])
+                        manual_tx = st.text_input(T['manual_tx_label'], placeholder="0x...")
+                        submit_sos = st.form_submit_button(T['sos_submit'])
                     
                     if submit_sos:
                         # SÉCURITÉ : On exige une adresse valide pour vérifier l'origine
                         if not recipient_address or len(recipient_address) < 10:
-                             st.error("❌ Adresse invalide. Veuillez renseigner VOTRE adresse Polygon ci-dessus (section 2).")
+                             st.error(T['err_invalid_address'])
                              success = False
                         elif MOCK_MODE:
                             success, msg = True, "Mock OK"
@@ -761,12 +762,12 @@ with tab1:
                         if success:
                             # ANTI-REPLAY CHECK
                             if manual_tx in used_tx_registry:
-                                 st.error("⛔️ Ce paiement a déjà été utilisé pour un autre ancrage.")
+                                 st.error(T['err_replay'])
                             else:
                                 st.session_state.payment_validated = True
                                 st.session_state.tx_hash = manual_tx # On stocke le hash
                                 used_tx_registry.add(manual_tx)
-                                st.success("✅ Transaction valide trouvée ! Reprise de l'ancrage...")
+                                st.success(T['sos_success'])
                                 st.rerun() # Refresh pour afficher la suite
                         else:
                             st.error(f"❌ Erreur : {msg}")
@@ -775,17 +776,17 @@ with tab1:
             if st.session_state.payment_validated and file_hash not in st.session_state.proof_cache:
                 
                 # Si on a pas de TX hash (mode classique), on met un placeholder
-                if "tx_hash" not in st.session_state:
-                     st.session_state.tx_hash = "Non spécifié (Mode Solde)"
+                 if "tx_hash" not in st.session_state:
+                      st.session_state.tx_hash = "Non spécifié (Mode Solde)"
+                      
+                 st.info(T['info_anchoring'])
                      
-                st.info("Paiement validé. Démarrage de l'ancrage...")
-                    
-                my_bar = st.progress(0, text="Connexion à Polygon...")
-                steps = [(30, "Signature de la transaction..."), (60, "Diffusion sur le réseau..."), (90, "Confirmation...")]
-                
-                for p, t in steps:
-                    time.sleep(0.5)
-                    my_bar.progress(p, text=t)
+                 my_bar = st.progress(0, text=T['progress_conn'])
+                 steps = [(30, T['progress_sign']), (60, T['progress_broadcast']), (90, T['progress_confirm'])]
+                 
+                 for p, t in steps:
+                     time.sleep(0.5)
+                     my_bar.progress(p, text=t)
                 
                 # REEL ANCRAGE
                 if MOCK_MODE:
@@ -796,9 +797,11 @@ with tab1:
                 my_bar.progress(100, text="Terminé !")
 
                 if result["success"]:
-                    st.balloons()
                     # SAUVEGARDE DU RÉSULTAT DANS LE STATE
                     st.session_state.proof_cache[file_hash] = result
+                    
+                    st.balloons()
+                    st.success(T['success_anchored'])
                     st.rerun() # Refresh pour afficher le certificat immédiatement
                 else:
                     st.error(f"Echec de l'ancrage : {result.get('error')}")
@@ -806,7 +809,6 @@ with tab1:
             # AFFICHAGE DU RÉSULTAT (PERSISTANT)
             if file_hash in st.session_state.proof_cache:
                 result = st.session_state.proof_cache[file_hash]
-                st.success("✅ **FÉLICITATIONS ! VOTRE ŒUVRE EST PROTÉGÉE.**")
                 
                 # Manual Expander Logic
                 if "show_cert" not in st.session_state:
@@ -814,51 +816,46 @@ with tab1:
                 
                 _, col_cert, _ = st.columns([1, 2, 1])
                 with col_cert:
-                    if st.button(f"{'🔽' if st.session_state.show_cert else '▶️'} Voir le Certificat de Preuve", use_container_width=True):
+                    if st.button(f"{'🔽' if st.session_state.show_cert else '▶️'} {T['btn_show_cert']}", use_container_width=True):
                         st.session_state.show_cert = not st.session_state.show_cert
                         st.rerun()
                 
                 if st.session_state.show_cert:
                     with st.container(border=True):
-                        st.markdown("### 📜 Certificat WorkGuard")
+                        st.markdown(f"### 📜 {T['cert_title']}")
                         
-                        st.write("**Propriétaire**")
+                        st.write(f"**{T['cert_owner']}**")
                         st.info(author_name)
                         
-                        st.write("**Fichier**")
+                        st.write(f"**{T['cert_file']}**")
                         st.text(uploaded_file.name)
                         
-                        st.write("**Empreinte (Hash)**")
+                        st.write(f"**{T['cert_hash']}**")
                         st.code(file_hash, language="text")
                         
-                        st.write("**Donnée Gravée**")
+                        st.write(f"**{T['cert_data']}**")
                         st.code(result.get('payload'), language="text")
                         
                         col_date, col_tx = st.columns([1, 2])
                         with col_date:
-                            st.write("**Date**")
+                            st.write(f"**{T['cert_date']}**")
                             st.text(result['timestamp'])
                         with col_tx:
-                            st.write("**Transaction ID (TX)**")
+                            st.write(f"**{T['cert_txid']}**")
                             st.code(result['tx_hash'], language="text")
                         
                         link = f"https://polygonscan.com/tx/{result['tx_hash']}"
-                        st.markdown(f"[🔎 Voir sur PolygonScan]({link})")
-                        st.caption("Sur PolygonScan, cliquez sur 'Click to see More' -> 'Input Data' -> 'View as UTF-8' pour lire votre nom.")
+                        st.markdown(f"[🔎 {T['cert_view_polygonscan']}]({link})")
+                        st.caption(T['cert_polygonscan_tip'])
                         
                         st.divider()
                         
                         # PDF DOWNLOAD BUTTON
-                        pdf_bytes = create_pdf_certificate(
-                            author_name, 
-                            uploaded_file.name, 
-                            file_hash, 
-                            result['tx_hash'], 
-                            result['timestamp'], 
-                            result.get('payload')
-                        )
+                        # PASSAGE DU LANGUE À CREATE_PDF (Sera implémenté dans Chunk 4)
+                        pdf_bytes = create_pdf_certificate(author_name, uploaded_file.name, file_hash, result['tx_hash'], result['timestamp'], result['payload'], lang=lang)
+                        
                         st.download_button(
-                            label="📄 Télécharger mon Certificat Officiel (PDF)",
+                            label=T['download_cert'],
                             data=pdf_bytes,
                             file_name=f"WorkGuard_Certificat_{file_hash[:8]}.pdf",
                             mime="application/pdf",
