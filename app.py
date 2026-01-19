@@ -281,7 +281,7 @@ def find_proof_in_history(target_hash):
 @st.cache_data(ttl=300) # Cache 5 minutes
 def scan_company_stats():
     """Récupère les stats : CA Total, Nombre de Clients, etc."""
-    stats = {"revenue_pol": 0.0, "client_count": 0, "proof_count": 0, "last_sales": []}
+    stats = {"revenue_pol": 0.0, "client_count": 0, "proof_count": 0, "voucher_est": 0, "last_sales": []}
     
     try:
         url = f"https://api.polygonscan.com/api?module=account&action=txlist&address={COMPANY_WALLET_ADDRESS}&startblock=0&endblock=99999999&page=1&offset=10000&sort=desc"
@@ -291,12 +291,15 @@ def scan_company_stats():
         
         if data['status'] == '1':
             txs = data['result']
+            payment_tx_count = 0
+            
             for tx in txs:
                 # 1. Revenu (Incoming TX > 0)
                 if tx['to'].lower() == COMPANY_WALLET_ADDRESS.lower() and int(tx['value']) > 0:
                     val_pol = float(Web3.from_wei(int(tx['value']), 'ether'))
                     stats['revenue_pol'] += val_pol
                     stats['client_count'] += 1
+                    payment_tx_count += 1
                     
                     if len(stats['last_sales']) < 5:
                         stats['last_sales'].append({
@@ -308,6 +311,10 @@ def scan_company_stats():
                 # 2. Preuves (Outgoing TX avec Data)
                 if tx['from'].lower() == COMPANY_WALLET_ADDRESS.lower() and len(tx['input']) > 10:
                      stats['proof_count'] += 1
+            
+            # Estimation Vouchers = Total Preuves - Paiements Reçus
+            # (Si on a ancré plus qu'on a été payé, c'est du gratuit/voucher)
+            stats['voucher_est'] = max(0, stats['proof_count'] - payment_tx_count)
                      
     except Exception as e:
         print(f"Stats Error: {e}")
@@ -571,19 +578,26 @@ with st.sidebar.expander(T['admin_login']):
 if st.session_state.get('admin_unlocked'):
     st.markdown(f"## {T['admin_dashboard']}")
     
-    if st.button(T['admin_refresh']):
-        scan_company_stats.clear()
-        st.rerun()
+    col_refresh, col_logout = st.columns([1, 4])
+    with col_refresh:
+        if st.button(T['admin_refresh']):
+            scan_company_stats.clear()
+            st.rerun()
+    with col_logout:
+        if st.button("🔒 Déconnexion"):
+            st.session_state['admin_unlocked'] = False
+            st.rerun()
         
     stats = scan_company_stats()
     
     # 1. METRICS
-    ac1, ac2, ac3 = st.columns(3)
+    ac1, ac2, ac3, ac4 = st.columns(4)
     matic_price = get_matic_price_eur()
     
     ac1.metric(T['admin_revenue'], f"{stats['revenue_pol']:.2f} POL", f"{stats['revenue_pol'] * matic_price:.2f} €")
     ac2.metric(T['admin_proofs'], stats['proof_count'])
-    ac3.metric("Clients", stats['client_count'])
+    ac3.metric("Clients (Payants)", stats['client_count'])
+    ac4.metric("Vouchers (Est.)", stats['voucher_est'])
     
     st.markdown("---")
     
