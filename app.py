@@ -71,6 +71,12 @@ st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
     
+    /* APPLE TOUCH ICON INJECTION */
+    /* Note: Streamlit doesn't support direct HEAD injection easily, but some browsers parse links in body */
+    </style>
+    <link rel="apple-touch-icon" href="static/apple-touch-icon.png">
+    <style>
+    
     * { font-family: 'Inter', sans-serif !important; }
     
     .stApp {
