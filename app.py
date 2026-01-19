@@ -556,7 +556,10 @@ T = TRANSLATIONS[lang]
 # ADMIN SECTION (SIDEBAR BOTTOM)
 st.sidebar.markdown("---")
 with st.sidebar.expander(T['admin_login']):
-    password = st.text_input(T['admin_pass_placeholder'], type="password")
+    # Utilisation d'un key pour pouvoir reset le mot de passe
+    if "admin_pass_input" not in st.session_state: st.session_state.admin_pass_input = ""
+    
+    password = st.text_input(T['admin_pass_placeholder'], type="password", key="admin_pass_input")
     
     # Check Password (Priorité Env Var pour Render, puis Secrets, puis Default)
     ADMIN_PASS = os.environ.get("admin_password", "admin123")
@@ -568,24 +571,34 @@ with st.sidebar.expander(T['admin_login']):
         except: pass
     
     if password == ADMIN_PASS:
-        st.success("🔓 Access Granted")
-        st.session_state['admin_unlocked'] = True
+        if not st.session_state.get('admin_unlocked'):
+            st.success("🔓 Access Granted")
+            st.session_state['admin_unlocked'] = True
     else:
-        if password: st.error("❌ Invalid")
-        st.session_state['admin_unlocked'] = False
+        # Seul cas où on verrouille : si le mot de passe est faux (et non vide)
+        if password: 
+            st.error("❌ Invalid")
+            st.session_state['admin_unlocked'] = False
+        # Si vide, on ne fait rien (ou on laisse verrouillé si c'était verrouillé)
+        if not password and st.session_state.get('admin_unlocked'):
+             # Cas spécial : Si on vient de se déconnecter, on veut pas se reconnecter
+             pass
 
 # ADMIN DASHBOARD OVERLAY
 if st.session_state.get('admin_unlocked'):
     st.markdown(f"## {T['admin_dashboard']}")
     
-    col_refresh, col_logout = st.columns([1, 4])
+    # Boutons côte à côte égalité (50/50)
+    col_refresh, col_logout = st.columns(2)
     with col_refresh:
-        if st.button(T['admin_refresh']):
+        if st.button(T['admin_refresh'], use_container_width=True):
             scan_company_stats.clear()
             st.rerun()
     with col_logout:
-        if st.button("🔒 Déconnexion"):
+        if st.button("🔒 Déconnexion", type="primary", use_container_width=True):
             st.session_state['admin_unlocked'] = False
+            # Reset du champ mot de passe pour éviter la reconnexion auto
+            st.session_state['admin_pass_input'] = ""
             st.rerun()
         
     stats = scan_company_stats()
