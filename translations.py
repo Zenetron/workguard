@@ -105,7 +105,16 @@ TRANSLATIONS = {
         "pdf_hash": "Empreinte (Hash) :",
         "pdf_tx": "Transaction (TX) :",
         "pdf_disclaimer": "Ce document certifie que l'empreinte numérique du fichier susmentionné a été ancrée de manière immuable sur la Blockchain Polygon à la date indiquée. La présence de cette transaction prouve l'existence du fichier à cet instant précis.",
-        "pdf_footer": "Vérifiable sur : https://polygonscan.com/"
+        "pdf_footer": "Vérifiable sur : https://polygonscan.com/",
+        
+        # Admin
+        "admin_login": "🔐 Accès Admin",
+        "admin_pass_placeholder": "Mot de passe...",
+        "admin_dashboard": "📊 Tableau de Bord",
+        "admin_revenue": "Chiffre d'Affaires",
+        "admin_proofs": "Preuves Ancrées",
+        "admin_last_sales": "Dernières Ventes",
+        "admin_refresh": "🔄 Actualiser les données"
     },
     "en": {
         "page_title": "WorkGuard - Timestamping Proof",
@@ -213,6 +222,15 @@ TRANSLATIONS = {
         "pdf_hash": "Fingerprint (Hash):",
         "pdf_tx": "Transaction (TX):",
         "pdf_disclaimer": "This document certifies that the digital fingerprint of the mentioned file has been immutably anchored on the Polygon Blockchain at the indicated date. The presence of this transaction proves the existence of the file at this precise moment.",
-        "pdf_footer": "Verifiable on: https://polygonscan.com/"
+        "pdf_footer": "Verifiable on: https://polygonscan.com/",
+        
+        # Admin
+        "admin_login": "🔐 Admin Access",
+        "admin_pass_placeholder": "Password...",
+        "admin_dashboard": "📊 Dashboard",
+        "admin_revenue": "Revenue",
+        "admin_proofs": "Anchored Proofs",
+        "admin_last_sales": "Last Sales",
+        "admin_refresh": "🔄 Refresh Data"
     }
 }
