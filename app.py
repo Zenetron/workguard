@@ -279,6 +279,42 @@ def find_proof_in_history(target_hash):
         print(f"Erreur Scan History: {e}")
         return None, debug_info
 
+@st.cache_data(ttl=300) # Cache 5 minutes
+def scan_company_stats():
+    """Récupère les stats : CA Total, Nombre de Clients, etc."""
+    stats = {"revenue_pol": 0.0, "client_count": 0, "proof_count": 0, "last_sales": []}
+    
+    try:
+        url = f"https://api.polygonscan.com/api?module=account&action=txlist&address={COMPANY_WALLET_ADDRESS}&startblock=0&endblock=99999999&page=1&offset=10000&sort=desc"
+        headers = {"User-Agent": "Mozilla/5.0"}
+        response = requests.get(url, headers=headers, timeout=10)
+        data = response.json()
+        
+        if data['status'] == '1':
+            txs = data['result']
+            for tx in txs:
+                # 1. Revenu (Incoming TX > 0)
+                if tx['to'].lower() == COMPANY_WALLET_ADDRESS.lower() and int(tx['value']) > 0:
+                    val_pol = float(Web3.from_wei(int(tx['value']), 'ether'))
+                    stats['revenue_pol'] += val_pol
+                    stats['client_count'] += 1
+                    
+                    if len(stats['last_sales']) < 5:
+                        stats['last_sales'].append({
+                            "date": datetime.fromtimestamp(int(tx['timeStamp'])).strftime("%Y-%m-%d %H:%M"),
+                            "amount": f"{val_pol:.2f} POL",
+                            "from": tx['from']
+                        })
+                
+                # 2. Preuves (Outgoing TX avec Data)
+                if tx['from'].lower() == COMPANY_WALLET_ADDRESS.lower() and len(tx['input']) > 10:
+                     stats['proof_count'] += 1
+                     
+    except Exception as e:
+        print(f"Stats Error: {e}")
+        
+    return stats
+
 def anchor_hash_on_polygon(file_hash, author_name, recipient_address=None):
     """
     Envoie une transaction REAL sur Polygon pour ancrer le hash + le nom de l'auteur.
@@ -510,6 +546,51 @@ with st.sidebar:
 
 lang = "fr" if "Français" in lang_choice else "en"
 T = TRANSLATIONS[lang]
+
+# ADMIN SECTION (SIDEBAR BOTTOM)
+st.sidebar.markdown("---")
+with st.sidebar.expander(T['admin_login']):
+    password = st.text_input(T['admin_pass_placeholder'], type="password")
+    
+    # Check Password (From Secrets or Default)
+    ADMIN_PASS = "admin123"
+    try:
+        ADMIN_PASS = st.secrets["admin_password"]
+    except: pass
+    
+    if password == ADMIN_PASS:
+        st.success("🔓 Access Granted")
+        st.session_state['admin_unlocked'] = True
+    else:
+        if password: st.error("❌ Invalid")
+        st.session_state['admin_unlocked'] = False
+
+# ADMIN DASHBOARD OVERLAY
+if st.session_state.get('admin_unlocked'):
+    st.markdown(f"## {T['admin_dashboard']}")
+    
+    if st.button(T['admin_refresh']):
+        scan_company_stats.clear()
+        st.rerun()
+        
+    stats = scan_company_stats()
+    
+    # 1. METRICS
+    ac1, ac2, ac3 = st.columns(3)
+    matic_price = get_matic_price_eur()
+    
+    ac1.metric(T['admin_revenue'], f"{stats['revenue_pol']:.2f} POL", f"{stats['revenue_pol'] * matic_price:.2f} €")
+    ac2.metric(T['admin_proofs'], stats['proof_count'])
+    ac3.metric("Clients", stats['client_count'])
+    
+    st.markdown("---")
+    
+    # 2. LAST SALES
+    st.markdown(f"### {T['admin_last_sales']}")
+    for sale in stats['last_sales']:
+        st.text(f"💰 {sale['date']} | {sale['amount']} | {sale['from']}")
+    
+    st.markdown("---")
 
 # IMPLÉMENTATION STANDARD
 # Logo Centré + Titre (Base64 pour centrage parfait + désactivation click)
