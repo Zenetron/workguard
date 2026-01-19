@@ -36,17 +36,15 @@ COMPANY_WALLET_ADDRESS = Web3.to_checksum_address("0xd12ef43f0cd2e925d2d55ede9b8
 # RÉCUPÉRATION SÉCURISÉE DEPUIS .streamlit/secrets.toml
 # RÉCUPÉRATION SÉCURISÉE (Local vs Prod)
 # 1. D'abord on regarde si une Variable d'Environnement existe (Render/Prod)
-if "private_key" in os.environ:
-    COMPANY_PRIVATE_KEY = os.environ["private_key"]
-# 2. Sinon on tente le fichier local secrets.toml (Dev Local)
-elif os.path.exists(".streamlit/secrets.toml"):
+# 1. D'abord on regarde si une Variable d'Environnement existe (Render/Prod)
+COMPANY_PRIVATE_KEY = os.environ.get("private_key", "0x...")
+
+# 2. Sinon on tente le fichier local secrets.toml (Dev Local) - Uniquement si le fichier existe
+if COMPANY_PRIVATE_KEY == "0x..." and os.path.exists(".streamlit/secrets.toml"):
     try:
-        COMPANY_PRIVATE_KEY = st.secrets["private_key"]
-    except KeyError:
-        COMPANY_PRIVATE_KEY = "0x..."
-else:
-    # 3. Fallback total
-    COMPANY_PRIVATE_KEY = "0x..."
+        COMPANY_PRIVATE_KEY = st.secrets.get("private_key", "0x...")
+    except Exception:
+        pass
 
 
 # MOCK_MODE = False pour activer la vraie blockchain
@@ -558,11 +556,14 @@ st.sidebar.markdown("---")
 with st.sidebar.expander(T['admin_login']):
     password = st.text_input(T['admin_pass_placeholder'], type="password")
     
-    # Check Password (From Secrets or Default)
-    ADMIN_PASS = "admin123"
-    try:
-        ADMIN_PASS = st.secrets["admin_password"]
-    except: pass
+    # Check Password (Priorité Env Var pour Render, puis Secrets, puis Default)
+    ADMIN_PASS = os.environ.get("admin_password", "admin123")
+    
+    # Si on est en local avec secrets.toml, on regarde dedans
+    if os.path.exists(".streamlit/secrets.toml"):
+        try:
+            ADMIN_PASS = st.secrets.get("admin_password", ADMIN_PASS)
+        except: pass
     
     if password == ADMIN_PASS:
         st.success("🔓 Access Granted")
@@ -672,14 +673,14 @@ with tab1:
             # Format attendu dans secrets.toml : voucher_codes = "CODE1,CODE2,CODE3"
             VALID_VOUCHERS = []
             
-            # 1. Chargement depuis Secrets TOML (Local)
+            # 1. Chargement depuis Secrets TOML (Local) - Seulement si fichier existe
             if os.path.exists(".streamlit/secrets.toml"):
                 try:
                      if "voucher_codes" in st.secrets:
                          VALID_VOUCHERS = st.secrets["voucher_codes"].split(",")
                 except: pass
             
-            # 2. Chargement depuis ENV (Render) - Override si présent
+            # 2. Chargement depuis ENV (Render) - Priorité Absolue
             if "VOUCHER_CODES" in os.environ:
                  VALID_VOUCHERS = os.environ["VOUCHER_CODES"].split(",")
             
