@@ -628,6 +628,20 @@ if st.session_state.get('admin_unlocked'):
         if DERIVATION_ERROR:
              st.error(f"⚠️ Erreur Dérivation : {DERIVATION_ERROR}")
              st.info("Vérifiez que votre clé privée est au format Hex (64 caractères, avec ou sans 0x).")
+             
+        # TEST BUTTON
+        if st.button("🧪 Tester la Dérivation Clé -> Adresse"):
+            try:
+                pk = COMPANY_PRIVATE_KEY.strip()
+                if not pk.startswith("0x"): pk = "0x" + pk
+                
+                acc = Account.from_key(pk)
+                st.success(f"✅ Succès ! Adresse dérivée : `{acc.address}`")
+                st.write(f"Comparaison: App Address = `{COMPANY_WALLET_ADDRESS}`")
+            except Exception as e:
+                st.error(f"❌ Echec : {e}")
+                st.exception(e)
+
     # -----------------------------------------------------------
     
     # Boutons côte à côte égalité (50/50)
