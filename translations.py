@@ -69,6 +69,15 @@ TRANSLATIONS = {
         "success_anchored": "✅ **FÉLICITATIONS ! VOTRE PREUVE EST ANCRÉE !**",
         "download_cert": "📄 **TÉLÉCHARGER LE CERTIFICAT (PDF)**",
         "btn_show_cert": "Détails du Certificat",
+        "cert_title": "Certificat d'Antériorité Numérique",
+        "cert_owner": "Propriétaire",
+        "cert_file": "Fichier",
+        "cert_hash": "Empreinte (Hash)",
+        "cert_data": "Données Ancrées",
+        "cert_date": "Date",
+        "cert_txid": "Transaction ID",
+        "cert_view_polygonscan": "Voir sur PolygonScan",
+        "cert_polygonscan_tip": "Ce lien prouve que le fichier existait à cette date.",
         
         # Tab 2
         "verify_intro": "ℹ️ Pour vérifier un fichier, importez-le ci-dessous.",
@@ -187,6 +196,15 @@ TRANSLATIONS = {
         "success_anchored": "✅ **CONGRATULATIONS! YOUR PROOF IS ANCHORED!**",
         "download_cert": "📄 **DOWNLOAD CERTIFICATE (PDF)**",
         "btn_show_cert": "Certificate Details",
+        "cert_title": "Digital Timestamp Certificate",
+        "cert_owner": "Owner",
+        "cert_file": "File",
+        "cert_hash": "Fingerprint (Hash)",
+        "cert_data": "Anchored Data",
+        "cert_date": "Date",
+        "cert_txid": "Transaction ID",
+        "cert_view_polygonscan": "View on PolygonScan",
+        "cert_polygonscan_tip": "This link proves the file existed at this date.",
         
         # Tab 2
         "verify_intro": "ℹ️ To verify a file, import it below.",
