@@ -607,6 +607,16 @@ def logout_admin():
 
 if st.session_state.get('admin_unlocked'):
     st.markdown(f"## {T['admin_dashboard']}")
+
+    # --- DEBUG SECTION (To diagnose "Nothing Changed" issue) ---
+    with st.expander("🛠 Admin Debug Info (Paramètres Techniques)", expanded=False):
+        st.write(f"**Wallet Scanné :** `{COMPANY_WALLET_ADDRESS}`")
+        if COMPANY_PRIVATE_KEY and len(COMPANY_PRIVATE_KEY) > 10:
+             masked_key = COMPANY_PRIVATE_KEY[:4] + "..." + COMPANY_PRIVATE_KEY[-4:]
+             st.write(f"**Private Key Loaded :** {masked_key} (Valid)")
+        else:
+             st.write("**Private Key :** ❌ Not found / Default")
+    # -----------------------------------------------------------
     
     # Boutons côte à côte égalité (50/50)
     col_refresh, col_logout = st.columns(2)
