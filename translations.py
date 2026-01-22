@@ -68,6 +68,7 @@ TRANSLATIONS = {
         "progress_confirm": "Confirmation...",
         "success_anchored": "✅ **FÉLICITATIONS ! VOTRE PREUVE EST ANCRÉE !**",
         "download_cert": "📄 **TÉLÉCHARGER LE CERTIFICAT (PDF)**",
+        "btn_show_cert": "Détails du Certificat",
         
         # Tab 2
         "verify_intro": "ℹ️ Pour vérifier un fichier, importez-le ci-dessous.",
@@ -185,6 +186,7 @@ TRANSLATIONS = {
         "progress_confirm": "Confirmation...",
         "success_anchored": "✅ **CONGRATULATIONS! YOUR PROOF IS ANCHORED!**",
         "download_cert": "📄 **DOWNLOAD CERTIFICATE (PDF)**",
+        "btn_show_cert": "Certificate Details",
         
         # Tab 2
         "verify_intro": "ℹ️ To verify a file, import it below.",
