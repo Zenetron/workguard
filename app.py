@@ -49,12 +49,20 @@ if COMPANY_PRIVATE_KEY == "0x..." and os.path.exists(".streamlit/secrets.toml"):
 
 # 3. AUTO-CONFIGURATION : Si on a une clé privée valide, on en déduit l'adresse publique
 # C'est CRITIQUE pour que les stats et les paiements visent le bon wallet
+DERIVATION_ERROR = None
+
 if COMPANY_PRIVATE_KEY and COMPANY_PRIVATE_KEY != "0x...":
     try:
-        derived_account = Account.from_key(COMPANY_PRIVATE_KEY)
+        # Robustesse : On s'assure qu'il y a le 0x
+        pk_to_use = COMPANY_PRIVATE_KEY.strip()
+        if not pk_to_use.startswith("0x"):
+            pk_to_use = "0x" + pk_to_use
+            
+        derived_account = Account.from_key(pk_to_use)
         COMPANY_WALLET_ADDRESS = derived_account.address
         # print(f"🔒 Authenticated as: {COMPANY_WALLET_ADDRESS}") # Security: Don't print unless debug
     except Exception as e:
+        DERIVATION_ERROR = str(e)
         print(f"⚠️ Invalid Private Key: {e}")
 
 
@@ -616,6 +624,10 @@ if st.session_state.get('admin_unlocked'):
              st.write(f"**Private Key Loaded :** {masked_key} (Valid)")
         else:
              st.write("**Private Key :** ❌ Not found / Default")
+             
+        if DERIVATION_ERROR:
+             st.error(f"⚠️ Erreur Dérivation : {DERIVATION_ERROR}")
+             st.info("Vérifiez que votre clé privée est au format Hex (64 caractères, avec ou sans 0x).")
     # -----------------------------------------------------------
     
     # Boutons côte à côte égalité (50/50)
