@@ -676,8 +676,7 @@ if st.session_state.get('admin_unlocked'):
     with col_logout:
         st.button("🔒 Déconnexion", type="primary", use_container_width=True, on_click=logout_admin)
         
-    with col_logout:
-        st.button("🔒 Déconnexion", type="primary", use_container_width=True, on_click=logout_admin)
+
         
     # stats = scan_company_stats(COMPANY_WALLET_ADDRESS) <- DEPLACÉ PLUS HAUT
     
