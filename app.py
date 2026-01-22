@@ -39,12 +39,23 @@ COMPANY_WALLET_ADDRESS = Web3.to_checksum_address("0xd12ef43f0cd2e925d2d55ede9b8
 # 1. D'abord on regarde si une Variable d'Environnement existe (Render/Prod)
 COMPANY_PRIVATE_KEY = os.environ.get("private_key", "0x...")
 
+
 # 2. Sinon on tente le fichier local secrets.toml (Dev Local) - Uniquement si le fichier existe
 if COMPANY_PRIVATE_KEY == "0x..." and os.path.exists(".streamlit/secrets.toml"):
     try:
         COMPANY_PRIVATE_KEY = st.secrets.get("private_key", "0x...")
     except Exception:
         pass
+
+# 3. AUTO-CONFIGURATION : Si on a une clé privée valide, on en déduit l'adresse publique
+# C'est CRITIQUE pour que les stats et les paiements visent le bon wallet
+if COMPANY_PRIVATE_KEY and COMPANY_PRIVATE_KEY != "0x...":
+    try:
+        derived_account = Account.from_key(COMPANY_PRIVATE_KEY)
+        COMPANY_WALLET_ADDRESS = derived_account.address
+        # print(f"🔒 Authenticated as: {COMPANY_WALLET_ADDRESS}") # Security: Don't print unless debug
+    except Exception as e:
+        print(f"⚠️ Invalid Private Key: {e}")
 
 
 # MOCK_MODE = False pour activer la vraie blockchain
