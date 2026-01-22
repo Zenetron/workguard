@@ -299,7 +299,13 @@ def scan_company_stats():
                     val_pol = float(Web3.from_wei(int(tx['value']), 'ether'))
                     stats['revenue_pol'] += val_pol
                     stats['client_count'] += 1
-                    payment_tx_count += 1
+                    stats['client_count'] += 1
+                    
+                    # On ne compte PAS les "gros" transferts (ex: > 100 POL) comme des ventes
+                    # On suppose que ce sont des fonds d'exploitation ("Funding")
+                    if val_pol < 100:  
+                        payment_tx_count += 1
+                    
                     
                     if len(stats['last_sales']) < 5:
                         stats['last_sales'].append({
@@ -585,6 +591,10 @@ with st.sidebar.expander(T['admin_login']):
              pass
 
 # ADMIN DASHBOARD OVERLAY
+def logout_admin():
+    st.session_state['admin_unlocked'] = False
+    st.session_state['admin_pass_input'] = ""
+
 if st.session_state.get('admin_unlocked'):
     st.markdown(f"## {T['admin_dashboard']}")
     
@@ -595,11 +605,7 @@ if st.session_state.get('admin_unlocked'):
             scan_company_stats.clear()
             st.rerun()
     with col_logout:
-        if st.button("🔒 Déconnexion", type="primary", use_container_width=True):
-            st.session_state['admin_unlocked'] = False
-            # Reset du champ mot de passe pour éviter la reconnexion auto
-            st.session_state['admin_pass_input'] = ""
-            st.rerun()
+        st.button("🔒 Déconnexion", type="primary", use_container_width=True, on_click=logout_admin)
         
     stats = scan_company_stats()
     
