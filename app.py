@@ -298,13 +298,12 @@ def scan_company_stats():
                 if tx['to'].lower() == COMPANY_WALLET_ADDRESS.lower() and int(tx['value']) > 0:
                     val_pol = float(Web3.from_wei(int(tx['value']), 'ether'))
                     stats['revenue_pol'] += val_pol
-                    stats['client_count'] += 1
-                    stats['client_count'] += 1
-                    
-                    # On ne compte PAS les "gros" transferts (ex: > 100 POL) comme des ventes
-                    # On suppose que ce sont des fonds d'exploitation ("Funding")
-                    if val_pol < 100:  
+                    if val_pol < 50:  
                         payment_tx_count += 1
+                        stats['client_count'] += 1
+                    
+                    # Backup list for debug if needed
+                    stats['payment_tx_count'] = payment_tx_count
                     
                     
                     if len(stats['last_sales']) < 5:
@@ -616,7 +615,10 @@ if st.session_state.get('admin_unlocked'):
     ac1.metric(T['admin_revenue'], f"{stats['revenue_pol']:.2f} POL", f"{stats['revenue_pol'] * matic_price:.2f} €")
     ac2.metric(T['admin_proofs'], stats['proof_count'])
     ac3.metric("Clients (Payants)", stats['client_count'])
-    ac4.metric("Vouchers (Est.)", stats['voucher_est'])
+    
+    # Tooltip explicatif pour le calcul
+    voucher_tooltip = f"Calcul : {stats['proof_count']} (Preuves) - {stats['client_count']} (Paiements < 50 POL)"
+    ac4.metric("Vouchers (Est.)", stats['voucher_est'], help=voucher_tooltip)
     
     st.markdown("---")
     
