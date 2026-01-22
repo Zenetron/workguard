@@ -298,18 +298,31 @@ def find_proof_in_history(target_hash):
         return None, debug_info
 
 @st.cache_data(ttl=300) # Cache 5 minutes
-def scan_company_stats():
+def scan_company_stats(target_address):
     """Récupère les stats : CA Total, Nombre de Clients, etc."""
-    stats = {"revenue_pol": 0.0, "client_count": 0, "proof_count": 0, "voucher_est": 0, "last_sales": []}
+    stats = {
+        "revenue_pol": 0.0, 
+        "client_count": 0, 
+        "proof_count": 0, 
+        "voucher_est": 0, 
+        "last_sales": [],
+        "api_debug": {"status": "init", "message": "Starting", "tx_count": 0, "url": ""}
+    }
     
     try:
-        url = f"https://api.polygonscan.com/api?module=account&action=txlist&address={COMPANY_WALLET_ADDRESS}&startblock=0&endblock=99999999&page=1&offset=10000&sort=desc"
+        url = f"https://api.polygonscan.com/api?module=account&action=txlist&address={target_address}&startblock=0&endblock=99999999&page=1&offset=10000&sort=desc"
+        stats['api_debug']['url'] = url
+        
         headers = {"User-Agent": "Mozilla/5.0"}
         response = requests.get(url, headers=headers, timeout=10)
         data = response.json()
         
+        stats['api_debug']['status'] = data.get('status')
+        stats['api_debug']['message'] = data.get('message')
+        
         if data['status'] == '1':
             txs = data['result']
+            stats['api_debug']['tx_count'] = len(txs)
             payment_tx_count = 0
             
             for tx in txs:
@@ -641,6 +654,13 @@ if st.session_state.get('admin_unlocked'):
             except Exception as e:
                 st.error(f"❌ Echec : {e}")
                 st.exception(e)
+                
+        # API DEBUG
+        if 'stats' in locals():
+            st.write("---")
+            st.write("**PolygonScan API Status:**")
+            st.json(stats.get('api_debug', {}))
+
 
     # -----------------------------------------------------------
     
@@ -653,7 +673,7 @@ if st.session_state.get('admin_unlocked'):
     with col_logout:
         st.button("🔒 Déconnexion", type="primary", use_container_width=True, on_click=logout_admin)
         
-    stats = scan_company_stats()
+    stats = scan_company_stats(COMPANY_WALLET_ADDRESS)
     
     # 1. METRICS
     ac1, ac2, ac3, ac4 = st.columns(4)
