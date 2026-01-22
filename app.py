@@ -628,6 +628,9 @@ def logout_admin():
 
 if st.session_state.get('admin_unlocked'):
     st.markdown(f"## {T['admin_dashboard']}")
+    
+    # LOAD STATS FIRST (for Debug Info)
+    stats = scan_company_stats(COMPANY_WALLET_ADDRESS)
 
     # --- DEBUG SECTION (To diagnose "Nothing Changed" issue) ---
     with st.expander("🛠 Admin Debug Info (Paramètres Techniques)", expanded=False):
@@ -673,7 +676,10 @@ if st.session_state.get('admin_unlocked'):
     with col_logout:
         st.button("🔒 Déconnexion", type="primary", use_container_width=True, on_click=logout_admin)
         
-    stats = scan_company_stats(COMPANY_WALLET_ADDRESS)
+    with col_logout:
+        st.button("🔒 Déconnexion", type="primary", use_container_width=True, on_click=logout_admin)
+        
+    # stats = scan_company_stats(COMPANY_WALLET_ADDRESS) <- DEPLACÉ PLUS HAUT
     
     # 1. METRICS
     ac1, ac2, ac3, ac4 = st.columns(4)
