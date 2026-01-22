@@ -298,6 +298,7 @@ def find_proof_in_history(target_hash):
         return None, debug_info
 
 @st.cache_data(ttl=300) # Cache 5 minutes
+@st.cache_data(ttl=300) # Cache 5 minutes
 def scan_company_stats(target_address):
     """Récupère les stats : CA Total, Nombre de Clients, etc."""
     stats = {
@@ -306,12 +307,23 @@ def scan_company_stats(target_address):
         "proof_count": 0, 
         "voucher_est": 0, 
         "last_sales": [],
-        "api_debug": {"status": "init", "message": "Starting", "tx_count": 0, "url": ""}
+        "api_debug": {"status": "init", "message": "Starting", "tx_count": 0, "url": "", "result": "N/A"}
     }
     
     try:
+        # API KEY MANAGEMENT
+        api_key = os.environ.get("POLYGONSCAN_API_KEY", "")
+        if not api_key and os.path.exists(".streamlit/secrets.toml"):
+            try:
+                api_key = st.secrets.get("POLYGONSCAN_API_KEY", "")
+            except: pass
+            
         url = f"https://api.polygonscan.com/api?module=account&action=txlist&address={target_address}&startblock=0&endblock=99999999&page=1&offset=10000&sort=desc"
-        stats['api_debug']['url'] = url
+        
+        if api_key:
+             url += f"&apikey={api_key}"
+             
+        stats['api_debug']['url'] = url.replace(api_key, "HIDDEN_KEY") if api_key else url
         
         headers = {"User-Agent": "Mozilla/5.0"}
         response = requests.get(url, headers=headers, timeout=10)
@@ -319,6 +331,7 @@ def scan_company_stats(target_address):
         
         stats['api_debug']['status'] = data.get('status')
         stats['api_debug']['message'] = data.get('message')
+        stats['api_debug']['result'] = data.get('result') # SHOW THE ERROR REASON
         
         if data['status'] == '1':
             txs = data['result']
