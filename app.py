@@ -319,7 +319,10 @@ def scan_company_stats(target_address):
         "client_count": 0, 
         "proof_count": 0, 
         "voucher_est": 0, 
+        "proof_count": 0, 
+        "voucher_est": 0, 
         "last_sales": [],
+        "debug_sales_list": [], # NEW: List of ALL counted sales for debugging
         "api_debug": {"status": "init", "message": "Starting", "tx_count": 0, "url": "", "result": "N/A"}
     }
     
@@ -364,6 +367,8 @@ def scan_company_stats(target_address):
                     if val_pol < 50:  
                         payment_tx_count += 1
                         stats['client_count'] += 1
+                        # Add to debug list
+                        stats['debug_sales_list'].append(f"{datetime.fromtimestamp(int(tx['timeStamp'])).strftime('%Y-%m-%d %H:%M')} | {val_pol:.4f} POL | From: ...{tx['from'][-4:]}")
                     
                     # Backup list for debug if needed
                     stats['payment_tx_count'] = payment_tx_count
@@ -694,6 +699,13 @@ if st.session_state.get('admin_unlocked'):
             st.write("---")
             st.write("**PolygonScan API Status:**")
             st.json(stats.get('api_debug', {}))
+            
+            # SALES DEBUG
+            if st.checkbox("🔍 Voir le détail des Ventes comptabilisées"):
+                 st.write(f"Total Transactions comptées : {len(stats.get('debug_sales_list', []))}")
+                 st.dataframe(stats.get('debug_sales_list', []), use_container_width=True)
+
+    # -----------------------------------------------------------
 
 
     # -----------------------------------------------------------
