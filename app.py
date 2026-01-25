@@ -192,6 +192,19 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+# --- SEO OPTIMIZATION ---
+seo_html = """
+<meta name="description" content="Solution Décentralisée de Preuve d'Antériorité : Protégez vos créations, fichiers, et contrats en les ancrant sur la Blockchain Polygon. Certificats immuables et vérifiables.">
+<meta name="keywords" content="Blockchain, Preuve d'antériorité, Copyright, IP, Propriété Intellectuelle, Polygon, WorkGuard, Timestamp, Ancrage">
+<meta property="og:title" content="WorkGuard - Preuve d'Antériorité Blockchain">
+<meta property="og:description" content="Sécurisez vos droits d'auteur en un clic sur la Blockchain Polygon.">
+<meta property="og:image" content="https://www.workguard.org/app/static/favicon.png">
+<meta property="og:url" content="https://www.workguard.org/">
+<!-- Google Verification Placeholder (Ajoutez votre code ci-dessous si nécessaire) -->
+<!-- <meta name="google-site-verification" content="VOTRE_CODE_ICI" /> -->
+"""
+st.markdown(seo_html, unsafe_allow_html=True)
+# ------------------------
 # -----------------------------------------------------------------------------
 # FONCTIONS MÉTIER
 # -----------------------------------------------------------------------------
