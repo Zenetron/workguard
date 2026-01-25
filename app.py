@@ -318,7 +318,12 @@ def scan_company_stats(target_address):
                 api_key = st.secrets.get("POLYGONSCAN_API_KEY", "")
             except: pass
             
-        url = f"https://api.polygonscan.com/api?module=account&action=txlist&address={target_address}&startblock=0&endblock=99999999&page=1&offset=10000&sort=desc"
+        # MIGRATION V2 (Unified Etherscan API)
+        # Old: https://api.polygonscan.com/api?...
+        # New: https://api.etherscan.io/v2/api?chainid=137&...
+        base_url = "https://api.etherscan.io/v2/api"
+        params = f"?chainid=137&module=account&action=txlist&address={target_address}&startblock=0&endblock=99999999&page=1&offset=10000&sort=desc"
+        url = base_url + params
         
         if api_key:
              url += f"&apikey={api_key}"
