@@ -298,7 +298,7 @@ def find_proof_in_history(target_hash):
         return None, debug_info
 
 @st.cache_data(ttl=300) # Cache 5 minutes
-@st.cache_data(ttl=300) # Cache 5 minutes
+
 def scan_company_stats(target_address):
     """Récupère les stats : CA Total, Nombre de Clients, etc."""
     stats = {
