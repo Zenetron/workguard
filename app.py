@@ -200,8 +200,8 @@ seo_html = """
 <meta property="og:description" content="Sécurisez vos droits d'auteur en un clic sur la Blockchain Polygon.">
 <meta property="og:image" content="https://www.workguard.org/app/static/favicon.png">
 <meta property="og:url" content="https://www.workguard.org/">
-<!-- Google Verification Placeholder (Ajoutez votre code ci-dessous si nécessaire) -->
-<!-- <meta name="google-site-verification" content="VOTRE_CODE_ICI" /> -->
+<!-- Google Verification Code -->
+<meta name="google-site-verification" content="TVk9wJCjcso-YsTPjj42RKInnDdB-5xU0ZykxFuJ1ug" />
 """
 st.markdown(seo_html, unsafe_allow_html=True)
 # ------------------------
