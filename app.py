@@ -747,7 +747,7 @@ if st.session_state.get('admin_unlocked'):
 # IMPLÉMENTATION STANDARD
 # Logo Centré + Titre (Base64 pour centrage parfait + désactivation click)
 try:
-    with open("logo_hd.png", "rb") as f:
+    with open("LogoWorkGuard.png", "rb") as f:
         data = base64.b64encode(f.read()).decode("utf-8")
         st.markdown(
             f"""
